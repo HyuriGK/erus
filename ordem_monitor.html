@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Ordens de Produção</title>
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* === PALETA ORACLE SQL DARK (AMARELO QUEIMADO) === */
+        :root {
+            /* Tons de Cinza Escuro (Mais Pretos) */
+            --primary-bg: #101014;    
+            --secondary-bg: #1c1c20;  
+            --accent-bg: #2a2a30;     
+            --border-color: #4a4a50;  
+            
+            /* Tons de Texto (Alta Visibilidade) */
+            --text-primary: #f0f0f0;   
+            --text-color: #f0f0f0;     /* Alias */
+            --text-secondary: #b0b0b0; 
+            --text-secondary-color: #b0b0b0; /* Alias */
+            --text-dark: #000000;      
+
+            /* Cores de Destaque (Amarelo Queimado) */
+            --primary-accent: #cc9900;       
+            --primary-accent-dark: #aa8000; 
+            --primary-color: var(--primary-accent); /* Alias */
+            
+            /* Cores de Feedback / Status */
+            --danger-color: #e74c3c;        /* Vermelho mantido */
+            --danger-text-color: #ff7b72;   /* Vermelho claro para texto */
+            --danger-hover-bg: #c0392b;     /* Vermelho escuro hover */
+            --status-red: var(--danger-color); /* Alias */
+            
+            --warning-color: #f1c40f;       /* Amarelo alerta mantido */
+            --status-yellow: var(--warning-color); /* Alias */
+            
+            --success-color: #2ecc71;       /* Verde mantido */
+            --status-green: var(--success-color); /* Alias */
+
+            /* Cores da Tabela/Lista */
+            --table-hover-bg: var(--primary-accent); /* Amarelo */
+            --table-hover-text: var(--text-dark);   /* Preto */
+            
+            /* Backgrounds Específicos */
+            --background-color: var(--primary-bg);
+            --surface-color: var(--secondary-bg);
+            --surface-hover-color: var(--accent-bg);
+            --secondary-color: var(--accent-bg); /* Alias para header */
+            
+            /* Status Concluído */
+            --status-completed-bg: rgba(46, 204, 113, 0.1); /* Fundo verde sutil */
+            --status-completed-border: var(--status-green); /* Borda verde */
+            
+            /* Botões */
+            --button-bg: var(--accent-bg); 
+            --button-hover-bg: var(--border-color);
+            
+            /* Modal */
+            --modal-overlay-color: rgba(0, 0, 0, 0.85); /* Mais escuro */
+        }
+
+        /* --- REGRAS ESPECÍFICAS DO TEMA ESCURO (Agora permanentes) --- */
+        .op-filters input { background-color: var(--input-bg); color: var(--text-color); } /* Ajustado */
+        .dropdown-content { background-color: var(--surface-color); } /* Ajustado */
+        .dropdown-content a:hover { 
+            background-color: var(--table-hover-bg); /* MUDANÇA: Amarelo */
+            color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+        .dropdown-content a.clear-link:hover { 
+            background-color: var(--danger-hover-bg); /* MUDANÇA: Vermelho escuro */
+            color: white; /* Garante texto branco */
+        }
+        .status-filters button { background-color: var(--button-bg); color: var(--text-color); border: 1px solid var(--border-color); } /* Ajustado */
+        .status-filters button:hover { background-color: var(--button-hover-bg); }
+        .status-filters button.active { 
+            background-color: var(--primary-color); /* MUDANÇA: Amarelo */
+            color: var(--text-dark); /* MUDANÇA: Texto escuro */
+            border-color: var(--primary-color); /* MUDANÇA: Amarelo */
+        }
+        .header-btn { 
+            background-color: var(--button-bg); /* MUDANÇA */
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        .header-btn:hover { 
+            background-color: var(--button-hover-bg); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+            border-color: var(--border-color); /* MUDANÇA */
+        }
+        
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0; display: flex; flex-direction: column;
+            height: 100vh; background-color: var(--background-color); color: var(--text-color);
+            transition: none; /* Removida transição de tema */
+        }
+
+        /* --- CABEÇALHO E BOTÕES MINIMALISTAS --- */
+        header {
+            background-color: var(--secondary-color); 
+            padding: 15px 20px; 
+            box-shadow: none; /* MUDANÇA */
+            z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--primary-accent); /* MUDANÇA: Borda amarela */
+        }
+        header h1 { margin: 0; font-size: 1.5em; color: var(--text-color); }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .dropdown { position: relative; display: inline-block; }
+        .header-btn {
+            padding: 8px 15px; border-radius: 4px; /* MUDANÇA */ 
+            cursor: pointer;
+            font-size: 0.9em; transition: all 0.2s ease;
+            text-decoration: none; display: inline-block; font-family: inherit; font-weight: 500;
+        }
+        .dropdown-content {
+            display: none; position: absolute; 
+            min-width: 240px; 
+            box-shadow: none; /* MUDANÇA */
+            z-index: 1; border-radius: 4px; /* MUDANÇA */ 
+            overflow: hidden; right: 0;
+            padding: 5px 0;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+        .dropdown-content a {
+            color: var(--text-color); padding: 12px 16px; text-decoration: none;
+            display: block; font-size: 0.9em;
+        }
+        .dropdown-content a.clear-link {
+            color: var(--danger-text-color);
+            font-weight: 500; margin-top: 5px; border-top: 1px solid var(--border-color);
+        }
+        .show { display: block; }
+
+        /* --- MODAL DASHBOARD --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: var(--modal-overlay-color);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: var(--surface-color);
+            margin: 5% auto; padding: 20px; border: 1px solid var(--border-color);
+            width: 90%; max-width: 1200px;
+            border-radius: 4px; /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            animation: slideIn 0.3s;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-header h2 { margin: 0; color: var(--text-color); }
+        .close-modal {
+            color: var(--text-secondary-color); float: right; font-size: 28px;
+            font-weight: bold; cursor: pointer; transition: color 0.2s;
+        }
+        .close-modal:hover, .close-modal:focus { color: var(--text-color); text-decoration: none; }
+        .dashboard-stats { display: flex; justify-content: space-around; text-align: center; margin-bottom: 20px; }
+        .stat-item span { display: block; font-size: 1.8em; font-weight: bold; }
+        .stat-item .critical { color: var(--status-red); }
+        .stat-item .almost-starting { color: var(--status-yellow); }
+        .stat-item .non-critical { color: var(--status-green); }
+        .stat-item small { font-size: 0.85em; color: var(--text-secondary-color); }
+        
+        .charts-container {
+            display: flex;
+            gap: 25px;
+            align-items: stretch;
+        }
+        .chart-wrapper {
+            flex: 1;
+            min-width: 0;
+            min-height: 400px; 
+        }
+
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        @keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
+
+        /* --- LAYOUT PRINCIPAL E FILTROS --- */
+        .container { display: flex; flex: 1; overflow: hidden; }
+        .op-list-panel {
+            width: 380px; background-color: var(--surface-color); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 10px;
+        }
+        .op-filters { padding: 10px 0; display: flex; gap: 10px; }
+        .filter-wrapper { position: relative; flex: 1; }
+        .op-filters input {
+            width: 100%; padding: 10px; border: 1px solid var(--border-color);
+            border-radius: 4px; /* MUDANÇA */ 
+            font-size: 0.95em;
+            padding-right: 28px;
+        }
+        .op-filters input:focus { /* MUDANÇA: Foco amarelo */
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(204, 153, 0, 0.3);
+        }
+        .clear-filter {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%); cursor: pointer;
+            font-size: 1.4em; line-height: 1; color: var(--text-secondary-color);
+            display: none;
+        }
+        .clear-filter:hover { color: var(--text-color); }
+        
+        .status-filters {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px;
+            padding-bottom: 10px;
+        }
+        .status-filters button {
+            padding: 8px; font-size: 0.9em; border-radius: 4px; /* MUDANÇA */
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        /* --- LISTA DE OPs E DETALHES --- */
+        .op-list { flex: 1; overflow-y: auto; }
+        .op-list ul { list-style: none; padding: 0; margin: 0; }
+        .op-list li {
+            padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, color 0.2s ease; /* MUDANÇA: Adicionado color */
+            height: 60px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .op-list li strong { font-size: 1em; color: var(--text-color); }
+        .op-list li small { font-size: 0.85em; color: var(--text-secondary-color); }
+        .op-list li.active {
+            background-color: rgba(204, 153, 0, 0.15); /* MUDANÇA: Fundo sutil amarelo */
+            border-left: 4px solid var(--primary-color); /* MUDANÇA: Borda amarela */
+            padding-left: 8px;
+        }
+        .op-list li:hover { 
+            background-color: var(--table-hover-bg); /* MUDANÇA: Amarelo */
+            color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+        /* Cor dos textos dentro do li no hover */
+        .op-list li:hover strong, 
+        .op-list li:hover small {
+             color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+
+
+        .op-list {
+            scrollbar-width: thin; scrollbar-color: var(--text-secondary-color) var(--surface-color);
+        }
+        .op-list::-webkit-scrollbar { width: 8px; }
+        .op-list::-webkit-scrollbar-track { background: var(--surface-color); }
+        .op-list::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 10px; border: 2px solid var(--surface-color);
+        }
+        .op-list::-webkit-scrollbar-thumb:hover { background-color: var(--text-secondary-color); }
+
+        .op-details { flex: 1; padding: 25px; overflow-y: auto; }
+        .op-details-container {
+            background-color: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: 4px; /* MUDANÇA */ 
+            padding: 20px; 
+            box-shadow: none; /* MUDANÇA */
+        }
+        .op-details h2 {
+            margin-top: 0; color: var(--text-color); font-size: 1.4em;
+            border-bottom: 2px solid var(--primary-color); /* MUDANÇA: Borda amarela */
+            padding-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .op-details h2 span {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .placeholder { text-align: center; padding-top: 100px; color: var(--text-secondary-color); }
+        
+        /* --- LAYOUT DOS DETALHES DA OP --- */
+        .op-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px 25px;
+            margin-bottom: 25px; 
+        }
+        .info-item { display: flex; flex-direction: column; min-width: 0; }
+        .info-item.full-width { grid-column: 1 / -1; }
+        .info-item strong { font-weight: 600; color: var(--text-secondary-color); font-size: 0.8em; margin-bottom: 2px; }
+        .info-item span {
+            font-size: 0.95em; color: var(--text-color);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        
+        .sector-summary {
+            margin-bottom: 8px; padding: 10px; border: 1px solid var(--border-color);
+            background: var(--surface-color); border-radius: 4px; /* MUDANÇA */ 
+            border-left-width: 5px;
+        }
+        /* MUDANÇA: Fundo verde sutil para concluído */
+        .sector-summary.stage-completed { background-color: var(--status-completed-bg); } 
+        /* MUDANÇA: Cores das bordas de status */
+        .sector-summary.status-em-dia { border-left-color: var(--status-green); }
+        .sector-summary.status-quase-atrasando { border-left-color: var(--status-yellow); }
+        .sector-summary.status-atrasada { border-left-color: var(--status-red); }
+        .sector-summary.status-concluida { border-left-color: var(--status-completed-border); }
+        .sector-summary h3 {
+           margin: 0 0 8px 0; color: var(--text-color); display: flex;
+           align-items: center; justify-content: space-between; font-size: 1em;
+        }
+        .sector-details-grid { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+        .quantities { font-size: 0.9em; }
+        .quantities strong { color: var(--text-secondary-color); }
+        .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; }
+        h2 .status-dot { height: 18px; width: 18px; margin-left: 10px; flex-shrink: 0; }
+        /* MUDANÇA: Cores dos pontos de status */
+        .status-dot.status-concluida { background-color: var(--status-completed-border); }
+        .status-dot.status-em-dia { background-color: var(--status-green); }
+        .status-dot.status-quase-atrasando { background-color: var(--status-yellow); }
+        .status-dot.status-atrasada { background-color: var(--status-red); }
+        .deadline {
+            font-weight: 600; color: var(--text-secondary-color); font-size: 0.8em;
+            display: flex; justify-content: flex-end; align-items: center;
+        }
+        .deadline strong { color: var(--text-secondary-color); margin-right: 5px; }
+        .delay-info { color: var(--status-red); font-size: 0.85em; font-weight: 600; }
+        .remaining-days-info { color: var(--status-green); font-size: 0.85em; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Controle de Ordens de Produção</h1>
+        <div class="header-actions">
+            <div class="dropdown">
+                <button onclick="toggleDropdown()" class="header-btn">Funções ▼</button>
+                <div id="importDropdown" class="dropdown-content">
+                    <a href="#" onclick="updateDashboard(); openModal()">Dashboard (Resumo)</a>
+                    <a href="#" onclick="triggerFileInput('op-file')">Importar OPs (Excel)</a>
+                    <a href="#" onclick="triggerFileInput('moldagem-file')">Apont. Moldagem</a>
+                    <a href="#" onclick="triggerFileInput('fusao-file')">Apont. Fusão</a>
+                    <a href="#" onclick="triggerFileInput('acabamento-file')">Apont. Acabamento</a>
+                    <a href="#" onclick="triggerFileInput('tratamento-file')">Apont. Tratamento</a>
+                    <a href="#" onclick="triggerFileInput('usinagem-file')">Apont. Usinagem</a>
+                    <a href="#" onclick="triggerFileInput('expedicao-file')">Apont. Expedição</a>
+                    <a href="#" onclick="clearServerData()" class="clear-link">Limpar Dados do Monitor</a>
+                </div>
+            </div>
+            <a href="processos.html" class="header-btn">Voltar</a> 
+        </div>
+        <div style="display: none;">
+            <input type="file" id="op-file" onchange="loadOPs(event)" accept=".xlsx, .xls">
+            <input type="file" id="moldagem-file" onchange="loadSectorData(event, 'moldagem')">
+            <input type="file" id="fusao-file" onchange="loadSectorData(event, 'fusao')">
+            <input type="file" id="acabamento-file" onchange="loadSectorData(event, 'acabamento')">
+            <input type="file" id="tratamento-file" onchange="loadSectorData(event, 'tratamento')">
+            <input type="file" id="usinagem-file" onchange="loadSectorData(event, 'usinagem')">
+            <input type="file" id="expedicao-file" onchange="loadSectorData(event, 'expedicao')">
+        </div>
+    </header>
+
+    <div id="dashboard-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Resumo das Ordens</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="dashboard-stats">
+                <div class="stat-item">
+                    <span id="critical-count" class="critical">0</span>
+                    <small>Críticas (Atrasadas)</small>
+                </div>
+                <div class="stat-item">
+                    <span id="almost-starting-count" class="almost-starting">0</span>
+                    <small>Aproximando (0-2 dias)</small>
+                </div>
+                <div class="stat-item">
+                    <span id="non-critical-count" class="non-critical">0</span>
+                    <small>Em Dia</small>
+                </div>
+            </div>
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <canvas id="status-chart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="timeline-chart"></canvas>
+                </div>
+            </div>
+            </div>
+    </div>
+
+    <div class="container">
+        <div class="op-list-panel">
+            <div class="op-filters">
+                <div class="filter-wrapper">
+                    <input type="text" id="op-filter" oninput="handleFilterInput(this)" placeholder="OP...">
+                    <span class="clear-filter" onclick="clearFilter('op-filter')">&times;</span>
+                </div>
+                <div class="filter-wrapper">
+                    <input type="text" id="client-filter" oninput="handleFilterInput(this)" placeholder="Cliente...">
+                    <span class="clear-filter" onclick="clearFilter('client-filter')">&times;</span>
+                </div>
+                 <div class="filter-wrapper">
+                    <input type="text" id="piece-code-filter" oninput="handleFilterInput(this)" placeholder="Cód. Peça...">
+                    <span class="clear-filter" onclick="clearFilter('piece-code-filter')">&times;</span>
+                </div>
+            </div>
+            <div class="status-filters">
+                <button id="filter-all" class="active" onclick="setFilterState('all')">Todas</button>
+                <button id="filter-critical" onclick="setFilterState('critical')">Críticas</button>
+                <button id="filter-approaching" onclick="setFilterState('approaching')">Aproximando</button>
+                <button id="filter-non-critical" onclick="setFilterState('non-critical')">Em Dia</button>
+            </div>
+            <div class="op-list" id="op-list"><ul></ul></div>
+        </div>
+        <div class="op-details" id="op-details">
+            <div class="placeholder">
+                <h2>Bem-vindo!</h2>
+                <p>Carregando dados do servidor...</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- VARIÁVEIS GLOBAIS ---
+        let opData = [];
+        let sectorData = {
+            moldagem: [], fusao: [], acabamento: [], tratamento: [], usinagem: [], expedicao: []
+        };
+        const sectorOrder = ['moldagem', 'fusao', 'acabamento', 'tratamento', 'usinagem', 'expedicao'];
+        let filterState = 'all';
+        let statusChart = null;
+        let timelineChart = null;
+        
+        // --- LÓGICA DE PERSISTÊNCIA (BACKEND) ---
+        document.addEventListener('DOMContentLoaded', loadDataFromServer);
+
+        async function loadDataFromServer() {
+            try {
+                const response = await fetch('/api/producao/load_all');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (data && data.opData) opData = data.opData;
+                if (data && data.sectorData) sectorData = data.sectorData;
+                
+                filterOPs();
+                const firstOpEl = document.querySelector('.op-list li');
+                if (firstOpEl) firstOpEl.click();
+                else document.querySelector('.placeholder').innerHTML = '<h2>Bem-vindo!</h2><p>Nenhum dado carregado. Importe o arquivo de OPs para começar.</p>';
+
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Não foi possível carregar os dados salvos do servidor.');
+            }
+        }
+
+        async function saveData() {
+            try {
+                const response = await fetch('/api/producao/save_all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ opData: opData, sectorData: sectorData })
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Falha ao salvar os dados.');
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+                alert(`Erro ao salvar dados: ${error.message}`);
+            }
+        }
+
+        async function clearServerData() {
+            if (!confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.')) return;
+            try {
+                const response = await fetch('/api/producao/clear_monitor', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Dados limpos com sucesso! A página será recarregada.');
+                    location.reload();
+                } else {
+                    throw new Error(result.error || 'Falha ao limpar os dados.');
+                }
+            } catch (error) {
+                console.error('Erro ao limpar dados:', error);
+                alert(`Erro ao limpar dados do servidor: ${error.message}`);
+            }
+        }
+
+        // --- LÓGICA DO MODAL DASHBOARD ---
+        const modal = document.getElementById('dashboard-modal');
+        const closeModalBtn = document.querySelector('.close-modal');
+
+        function openModal() { modal.style.display = 'block'; }
+        function closeModal() { modal.style.display = 'none'; }
+        
+        closeModalBtn.onclick = closeModal;
+        window.onclick = function(event) { if (event.target == modal) closeModal(); }
+        document.addEventListener('keydown', function(event) { if (event.key === "Escape") closeModal(); });
+
+        function updateDashboard() {
+            let criticalCount = 0;
+            let almostStartingCount = 0;
+            let nonCriticalCount = 0;
+            let startsYesterday = 0;
+            let startsToday = 0;
+            let startsTomorrow = 0;
+            
+            opData.slice(1).forEach(op => {
+                if (!op || !op[0]) return;
+                const scores = getOpScores(op);
+                if (scores.criticalScore > 0) {
+                    criticalCount++;
+                } else if (scores.nonCriticalScore >= 0 && scores.nonCriticalScore <= 2) {
+                    almostStartingCount++;
+                } else {
+                    nonCriticalCount++;
+                }
+                
+                const days = scores.nonCriticalScore;
+                if (days === -1) {
+                    startsYesterday++;
+                } else if (days === 0) {
+                    startsToday++;
+                } else if (days === 1) {
+                    startsTomorrow++;
+                }
+            });
+
+            document.getElementById('critical-count').textContent = criticalCount;
+            document.getElementById('almost-starting-count').textContent = almostStartingCount;
+            document.getElementById('non-critical-count').textContent = nonCriticalCount;
+            
+            // --- ATUALIZAÇÃO: Busca cores do CSS ---
+            const rootStyles = getComputedStyle(document.documentElement);
+            const textColor = rootStyles.getPropertyValue('--text-color').trim();
+            const surfaceColor = rootStyles.getPropertyValue('--surface-color').trim();
+            const statusRed = rootStyles.getPropertyValue('--status-red').trim();
+            const statusYellow = rootStyles.getPropertyValue('--status-yellow').trim();
+            const statusGreen = rootStyles.getPropertyValue('--status-green').trim();
+            // --- FIM DA ATUALIZAÇÃO ---
+
+            const ctxPie = document.getElementById('status-chart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: ['Críticas', 'Aproximando', 'Em Dia'],
+                    datasets: [{
+                        data: [criticalCount, almostStartingCount, nonCriticalCount],
+                        backgroundColor: [statusRed, statusYellow, statusGreen], // Usa cores do CSS
+                        borderColor: surfaceColor,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Situação Geral das OPs', color: textColor, font: { size: 16 } },
+                        legend: { position: 'top', labels: { color: textColor } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                    return `${label}: ${value} (${percentage})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctxBar = document.getElementById('timeline-chart').getContext('2d');
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Deveria ter começado ontem', 'Começa hoje', 'Começa amanhã'],
+                    datasets: [{
+                        label: 'Quantidade de OPs',
+                        data: [startsYesterday, startsToday, startsTomorrow],
+                        // Usa as cores de status com transparência
+                        backgroundColor: [
+                            statusRed + '99', // ~60% alpha
+                            statusYellow + '99',
+                            statusGreen + '99',
+                        ],
+                        borderColor: [
+                            statusRed,
+                            statusYellow,
+                            statusGreen,
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Necessidade de Início de Produção', color: textColor, font: { size: 16 } },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                stepSize: 1
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' } // Grid claro
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { display: false } // Sem grid vertical
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // --- LÓGICA DA INTERFACE E FILTROS ---
+        function handleFilterInput(inputElement) {
+            const clearButton = inputElement.nextElementSibling;
+            clearButton.style.display = inputElement.value ? 'block' : 'none';
+            filterOPs();
+        }
+
+        function clearFilter(inputId) {
+            const input = document.getElementById(inputId);
+            input.value = '';
+            input.focus();
+            handleFilterInput(input);
+        }
+
+        function toggleDropdown() { document.getElementById("importDropdown").classList.toggle("show"); }
+        function triggerFileInput(fileId) {
+            document.getElementById(fileId).click();
+            document.getElementById("importDropdown").classList.remove("show");
+        }
+        window.onmouseup = function(event) {
+            if (!event.target.matches('.header-btn')) {
+                document.querySelectorAll(".dropdown-content.show").forEach(d => d.classList.remove('show'));
+            }
+        }
+
+        function excelDateToString(serial) {
+            if (typeof serial !== 'number' || isNaN(serial)) return serial;
+            const utc_days = Math.floor(serial - 25569);
+            return formatDate(new Date(utc_days * 86400 * 1000));
+        }
+        
+        function stringToDate(dateString) {
+            if (!dateString || typeof dateString !== 'string') return null;
+            const parts = dateString.split('/');
+            if (parts.length !== 3) return null;
+            const date = new Date(Date.UTC(parts[2], parts[1] - 1, parts[0])); 
+            return date;
+        }
+
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            return `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
+        }
+
+        function parseCsvRow(line) {
+            const regex = /(".*?"|[^",]+)(?=\s*,|\s*$)/g;
+            return (line.match(regex) || []).map(field => field.replace(/^"|"$/g, ''));
+        }
+
+        function loadOPs(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                let rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                opData = rawData.map(row => {
+                    if (row && row.length > 8) {
+                        row[5] = excelDateToString(row[5]);
+                        row[8] = excelDateToString(row[8]);
+                    }
+                    return row;
+                });
+                filterOPs();
+                saveData();
+                updateDashboard(); 
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadSectorData(event, sector) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.trim().split('\n');
+                rows.shift();
+                sectorData[sector] = rows.map(row => parseCsvRow(row));
+                alert(`Arquivo de ${sector} carregado!`);
+                const currentOpEl = document.querySelector('.op-list li.active');
+                if (currentOpEl) showOPDetails(currentOpEl.dataset.op);
+                filterOPs();
+                saveData();
+                updateDashboard(); 
+            };
+            reader.readAsText(file, 'ISO-8859-1');
+        }
+        
+        function clearActiveOPs() {
+            document.querySelectorAll('.op-list li').forEach(item => item.classList.remove('active'));
+        }
+        
+        function setFilterState(newFilterState) {
+            filterState = newFilterState;
+            document.querySelectorAll('.status-filters button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${newFilterState}`).classList.add('active');
+            filterOPs();
+        }
+
+        function getOpScores(op) {
+            if (!op) return { criticalScore: 0, nonCriticalScore: Infinity };
+            const opNumber = String(op[0]);
+            const opQuantidade = parseFloat(String(op[4]).replace(',', '.')) || 0;
+            const deliveryDate = stringToDate(op[8]);
+            if (!deliveryDate) return { criticalScore: 0, nonCriticalScore: Infinity };
+            
+            const today = new Date();
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+            let criticalScore = 0;
+            let minDiffDays = Infinity;
+
+            for (const sector of sectorOrder) {
+                let totalProduzido = 0;
+                if (sectorData[sector]) {
+                    sectorData[sector].filter(r => r && r[1] === opNumber).forEach(row => {
+                        const cleanStr = (row[9] || '').replace(/\./g, '').replace(',', '.');
+                        const num = parseFloat(cleanStr);
+                        if (!isNaN(num)) totalProduzido += num;
+                    });
+                }
+                
+                if (totalProduzido < opQuantidade) {
+                    let deadlineDate = new Date(deliveryDate); 
+                    
+                    const sectorIndex = sectorOrder.slice().reverse().indexOf(sector);
+                    deadlineDate.setUTCDate(deadlineDate.getUTCDate() - (5 * sectorIndex));
+                    
+                    const diffTime = deadlineDate.getTime() - todayUTC.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays < minDiffDays) minDiffDays = diffDays;
+                    if (diffDays < 0) criticalScore += Math.abs(diffDays);
+                }
+            }
+            return { criticalScore, nonCriticalScore: minDiffDays };
+        }
+        
+        function filterOPs() {
+            const opFilter = document.getElementById('op-filter').value.toLowerCase();
+            const clientFilter = document.getElementById('client-filter').value.toLowerCase();
+            const pieceCodeFilter = document.getElementById('piece-code-filter').value.toLowerCase();
+            
+            let filteredOps = opData.slice(1).filter(op => {
+                if (!op || !op[0]) return false;
+                const opMatch = String(op[0]).toLowerCase().includes(opFilter);
+                const clientMatch = String(op[7] || '').toLowerCase().includes(clientFilter);
+                const pieceCodeMatch = String(op[2] || '').toLowerCase().includes(pieceCodeFilter);
+                return opMatch && clientMatch && pieceCodeMatch;
+            });
+
+            if (filterState === 'critical') {
+                filteredOps = filteredOps.filter(op => getOpScores(op).criticalScore > 0);
+            } else if (filterState === 'approaching') {
+                 filteredOps = filteredOps.filter(op => {
+                    const scores = getOpScores(op);
+                    return scores.criticalScore === 0 && scores.nonCriticalScore >= 0 && scores.nonCriticalScore <= 2;
+                });
+            } else if (filterState === 'non-critical') {
+                filteredOps = filteredOps.filter(op => {
+                    const scores = getOpScores(op);
+                    return scores.criticalScore === 0 && scores.nonCriticalScore > 2;
+                });
+            }
+
+            filteredOps.sort((a, b) => {
+                const scoreA = getOpScores(a);
+                const scoreB = getOpScores(b);
+
+                if (filterState === 'non-critical') {
+                    return scoreB.nonCriticalScore - scoreA.nonCriticalScore;
+                }
+
+                if (scoreA.criticalScore > 0 || scoreB.criticalScore > 0) {
+                    if (scoreB.criticalScore !== scoreA.criticalScore) {
+                        return scoreB.criticalScore - scoreA.criticalScore;
+                    }
+                }
+                return scoreA.nonCriticalScore - scoreB.nonCriticalScore;
+            });
+
+            displayOPs(filteredOps);
+        }
+        
+        function displayOPs(opsToDisplay) {
+            const opList = document.getElementById('op-list').querySelector('ul');
+            opList.innerHTML = ''; 
+            const dataRows = opsToDisplay || opData.slice(1);
+            
+            dataRows.forEach(op => {
+                if (op && op[0] && op[2]) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<div class="op-info-main"><strong>OP: ${String(op[0])}</strong></div><small>${String(op[2])}</small>`;
+                    li.dataset.op = String(op[0]);
+                    li.dataset.client = String(op[7] || '');
+                    li.onclick = (e) => {
+                        clearActiveOPs();
+                        e.currentTarget.classList.add('active');
+                        showOPDetails(String(op[0]));
+                    }
+                    opList.appendChild(li);
+                }
+            });
+        }
+        
+        function showOPDetails(opNumber) {
+            const opDetails = document.getElementById('op-details');
+            const selectedOP = opData.slice(1).find(op => String(op[0]) === opNumber);
+            if (!selectedOP) {
+                opDetails.innerHTML = '<div class="op-details-container"><h2>Ordem de Produção não encontrada.</h2></div>';
+                return;
+            }
+            const opInfo = {
+                op: selectedOP[0], pedido: selectedOP[1], codigoPeca: selectedOP[2],
+                descricaoPeca: selectedOP[3], quantidade: selectedOP[4], dataEmissao: selectedOP[5],
+                nomeCliente: selectedOP[7], dataEntrega: selectedOP[8], material: selectedOP[9]
+            };
+
+            const deliveryDate = stringToDate(opInfo.dataEntrega);
+            const deadlines = {};
+            if (deliveryDate) {
+                const reversedOrder = sectorOrder.slice().reverse();
+                
+                reversedOrder.forEach((sector, index) => {
+                    const deadlineDate = new Date(deliveryDate); 
+                    const numSectorsAfter = index;
+                    const totalDaysToSubtract = numSectorsAfter * 5; 
+                    deadlineDate.setUTCDate(deadlineDate.getUTCDate() - totalDaysToSubtract);
+                    deadlines[sector] = deadlineDate;
+                });
+            }
+            
+            const today = new Date();
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+            let overallStatusCode = 0;
+            const statusHierarchy = { 'concluida': 0, 'em-dia': 1, 'quase-atrasando': 2, 'atrasada': 3 };
+
+            const sectorProductionTotals = {};
+            sectorOrder.forEach(sector => {
+                let total = 0;
+                if(sectorData[sector]) {
+                    sectorData[sector].filter(r => r && r[1] === opNumber).forEach(row => {
+                        const cleanStr = (row[9] || '').replace(/\./g, '').replace(',', '.');
+                        const num = parseFloat(cleanStr);
+                        if (!isNaN(num)) total += num;
+                    });
+                }
+                sectorProductionTotals[sector] = total;
+            });
+
+            let detailsCardsHTML = '';
+            sectorOrder.forEach((sector, index) => {
+                const sectorName = sector.charAt(0).toUpperCase() + sector.slice(1);
+                const totalProduzido = sectorProductionTotals[sector];
+                
+                const futureProductionExists = sectorOrder.slice(index + 1)
+                    .some(futureSector => sectorProductionTotals[futureSector] > 0);
+                
+                const isSkipped = (totalProduzido === 0 && futureProductionExists);
+
+                if (isSkipped) {
+                    detailsCardsHTML += `<div class="sector-summary status-quase-atrasando">
+                        <h3><span>${sectorName}</span></h3>
+                        <div class="sector-details-grid">
+                            <div style="font-style: italic; color: var(--text-secondary-color); grid-column: 1 / -1;">
+                                Etapa não aprovisionada para este roteiro de produção.
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    const opQuantidade = parseFloat(String(opInfo.quantidade).replace(',', '.')) || 0;
+                    const isCompleted = totalProduzido >= opQuantidade;
+                    
+                    let statusClass = 'em-dia';
+                    let statusText = '';
+
+                    if (isCompleted) {
+                        statusClass = 'concluida';
+                    } else {
+                        const deadlineDate = deadlines[sector];
+                        if (deadlineDate) {
+                            const diffTime = deadlineDate.getTime() - todayUTC.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays < 0) {
+                                statusClass = 'atrasada';
+                                statusText = `<span class="delay-info">(${Math.abs(diffDays)} dias de atraso)</span>`;
+                            } else {
+                                if (diffDays >= 0 && diffDays <= 2) statusClass = 'quase-atrasando';
+                                const dayText = diffDays === 1 ? 'dia restante' : 'dias restantes';
+                                const message = diffDays === 0 ? 'Necessidade para hoje' : `${diffDays} ${dayText}`;
+                                statusText = `<span class="remaining-days-info">(${message})</span>`;
+                            }
+                        }
+                    }
+                    
+                    const currentStatusCode = statusHierarchy[statusClass];
+                    if(currentStatusCode > overallStatusCode) overallStatusCode = currentStatusCode;
+
+                    const formatOptions = totalProduzido % 1 !== 0 ? { minimumFractionDigits: 2 } : {};
+                    const formattedTotalProduzido = totalProduzido.toLocaleString('pt-BR', formatOptions);
+                    const formatOptionsOp = opQuantidade % 1 !== 0 ? { minimumFractionDigits: 2 } : {};
+                    const formattedOpQuantidade = opQuantidade.toLocaleString('pt-BR', formatOptionsOp);
+                    
+                    detailsCardsHTML += `<div class="sector-summary status-${statusClass} ${isCompleted ? 'stage-completed' : ''}">
+                        <h3>
+                            <span>${sectorName}</span>
+                            ${statusText}
+                        </h3>
+                        <div class="sector-details-grid">
+                            <div class="quantities">
+                                <span><strong>Qtd. OP:</strong> ${formattedOpQuantidade} | <strong>Qtd. Prod.:</strong> ${formattedTotalProduzido}</span>
+                            </div>
+                            <div class="deadline">
+                                <strong>Prev. Necessidade:</strong>
+                                <span>${formatDate(deadlines[sector])}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            });
+            
+            const overallStatusClass = Object.keys(statusHierarchy).find(key => statusHierarchy[key] === overallStatusCode);
+            
+            let detailsHTML = `<div class="op-details-container">
+                <h2><span>OP: ${opInfo.op} (Pedido: ${opInfo.pedido})</span><span class="status-dot status-${overallStatusClass}"></span></h2>
+                <div class="op-info">
+                    <div class="info-item full-width"><strong>Cliente</strong><span title="${opInfo.nomeCliente}">${opInfo.nomeCliente}</span></div>
+                    <div class="info-item full-width"><strong>Descrição</strong><span title="${opInfo.descricaoPeca}">${opInfo.descricaoPeca}</span></div>
+                    <div class="info-item"><strong>Cód. Peça</strong><span>${opInfo.codigoPeca}</span></div>
+                    <div class="info-item"><strong>Material</strong><span>${opInfo.material || 'N/A'}</span></div>
+                    <div class="info-item"><strong>Emissão</strong><span>${opInfo.dataEmissao}</span></div>
+                    <div class="info-item"><strong>Entrega</strong><span>${opInfo.dataEntrega}</span></div>
+                </div>
+                ${detailsCardsHTML}
+            </div>`;
+
+            opDetails.innerHTML = detailsHTML;
+        }
+    </script>
+</body>
+</html>

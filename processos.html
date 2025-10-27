@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engenharia de Processos - Dark Mode (Amarelo)</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 1. ROOT VARIABLES (DARK MODE & SQUARE STYLE - AMARELO QUEIMADO) --- */
+        :root {
+            --font-family: 'Inter', sans-serif;
+            
+            /* Colors - DARK MODE (Amarelo Queimado Fraco) */
+            --color-primary: #ca8a04; /* Amarelo Queimado / Mostarda Escuro */
+            --color-primary-light: #fcd34d; /* Amarelo Queimado Claro */
+            --color-sidebar-bg: #121212; 
+            --color-sidebar-link: #d1d5db; 
+            --color-sidebar-link-hover: #ffffff;
+            --color-sidebar-active-bg: rgba(202, 138, 4, 0.15); /* Fundo Ativo suave (Amarelo) */
+            --color-page-bg: #1e1e1e; 
+            --color-content-bg: #2c2c2c; 
+            --color-text-primary: #f3f4f6; 
+            --color-text-secondary: #a1a1aa; 
+            --color-border: #3f3f46; 
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444; /* Cor vermelha para o botão de edição */
+
+            /* Spacing (Mantido) */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+
+            /* Border Radius & Shadows (Mais Quadrado/Sólido) */
+            --border-radius-sm: 2px;
+            --border-radius-md: 4px; 
+            --border-radius-lg: 8px; 
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease-in-out;
+            --transition-std: 0.3s ease-in-out;
+        }
+
+        /* --- 2. GLOBAL STYLES & RESET --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--color-page-bg);
+            color: var(--color-text-primary);
+            padding-bottom: 35px; 
+        }
+
+        /* Desativa a seleção de texto e o cursor piscando no corpo principal, exceto nos inputs e textareas */
+        .main-content, .sidebar {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .search-input, .post-it-content {
+            user-select: text; /* Reativa a seleção de texto para inputs */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+        
+        /* --- 3. LAYOUT (Mantido) --- */
+        .app-container {
+            min-height: calc(100vh - 35px);
+            display: flex;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: var(--space-xl) var(--space-xxl);
+            overflow-y: auto; /* Permite scroll no conteúdo principal se necessário */
+        }
+        
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+
+        /* --- 4. COMPONENT: Sidebar (Ajustes DARK MODE) --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--color-sidebar-bg);
+            color: var(--color-sidebar-link);
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-lg) var(--space-md);
+            border-right: 1px solid var(--color-border);
+            transition: width var(--transition-std);
+            overflow-y: auto; /* Permite scroll no sidebar */
+            max-height: calc(100vh - 35px); /* Garante que o sidebar não ultrapasse a altura visível */
+            
+            /* OCULTAR BARRA DE ROLAGEM */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            
+            /* ROLAGEM SUAVE */
+            scroll-behavior: smooth;
+        }
+        
+        /* OCULTAR BARRA DE ROLAGEM para WebKit (Chrome, Safari) */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            background: transparent;
+        }
+
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            /* Importante: Adiciona shrink 0 para que o header não seja comprimido */
+            flex-shrink: 0; 
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+        }
+
+        .header-gear-icon {
+            font-size: 1.75rem; 
+            color: var(--color-primary); 
+            animation: spin 4s linear infinite; 
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.75rem;
+            color: var(--color-sidebar-link-hover);
+            margin: 0;
+        }
+        
+        .sidebar-header p {
+            margin: var(--space-xs) 0 0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--color-sidebar-link);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1; /* Permite que o menu ocupe o espaço restante e force o scroll */
+        }
+
+        .sidebar-menu a, .sidebar-menu .dropdown-btn {
+            color: var(--color-sidebar-link);
+            text-decoration: none;
+            display: flex;
+            align-items: center; 
+            padding: 14px var(--space-md);
+            margin: var(--space-sm) 0;
+            border-radius: var(--border-radius-md);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .sidebar-menu i.fa-solid {
+            margin-right: var(--space-md);
+            width: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu .dropdown-btn:hover {
+            background-color: var(--color-sidebar-active-bg);
+            color: var(--color-sidebar-link-hover);
+        }
+
+        .sidebar-menu a.active {
+            background: var(--color-primary);
+            color: var(--color-sidebar-link-hover);
+            font-weight: 600;
+            border-right: 4px solid var(--color-primary-light); 
+            padding-right: calc(var(--space-md) - 4px);
+        }
+        
+        .dropdown-container {
+            display: none;
+            padding-left: var(--space-lg);
+            border-left: 2px solid var(--color-border); 
+            margin-left: var(--space-xl); 
+        }
+        
+        .dropdown-container a {
+            font-size: 0.9rem;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .dropdown-btn .fa-chevron-down {
+            margin-left: auto;
+            transition: transform var(--transition-std);
+            font-size: 0.8rem;
+        }
+        
+        .dropdown-btn.active .fa-chevron-down { transform: rotate(180deg); }
+
+        /* --- 5. COMPONENT: Main Content & NEW Header (Ajustes DARK MODE/SQUARE) --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+            background-color: var(--color-content-bg);
+            padding: var(--space-md);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-icon {
+            color: var(--color-text-secondary);
+            font-size: 1.3rem;
+            text-decoration: none;
+            padding: 0 var(--space-sm);
+            transition: color var(--transition-fast);
+        }
+
+        .header-icon:hover {
+            color: var(--color-text-primary);
+        }
+        
+        /* --- 6. COMPONENT: Search & Buttons (Ajustes DARK MODE/SQUARE) --- */
+        .search-container {
+            position: relative;
+            flex-grow: 1; /* Permite que a barra de pesquisa se expanda */
+            max-width: 500px;
+        }
+
+        .search-container .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            transform: translateY(-50%);
+            color: var(--color-text-secondary);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            font-size: 0.95rem;
+            font-family: var(--font-family);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-md);
+            transition: all var(--transition-std);
+            background-color: var(--color-page-bg); 
+            color: var(--color-text-primary);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary); 
+            box-shadow: 0 0 0 1px var(--color-primary); 
+            background-color: #121212;
+        }
+        
+        #suggestions-box {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background-color: var(--color-content-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-md);
+            z-index: 100;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px var(--space-md);
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 1px solid var(--color-border);
+            transition: background-color var(--transition-fast);
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover, .suggestion-item.suggestion-active { 
+            background-color: var(--color-primary); 
+            color: var(--color-sidebar-link-hover);
+        }
+
+        .btn-principal {
+            display: inline-block;
+            background-color: var(--color-primary); 
+            color: #121212; 
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            transition: background-color var(--transition-std), transform var(--transition-std);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .btn-principal:hover {
+            background-color: var(--color-primary-light); 
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* --- NOVO ESTILO: Botões Flutuantes de Acesso Rápido (Ajustes para DARK) --- */
+.floating-actions {
+    position: fixed;
+    bottom: calc(35px + var(--space-lg)); /* Ajusta acima do footer */
+    left: calc(260px + var(--space-lg)); /* Alinhado à sidebar (260px) + margem */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    z-index: 1000; /* Acima de tudo, mas abaixo do modal */
+}
+        
+        /* --- 7. COMPONENT: Footer (Ajustes DARK MODE) --- */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--color-sidebar-bg); 
+            color: var(--color-text-secondary);
+            padding: 0 var(--space-xl);
+            height: 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--color-border);
+            z-index: 1000;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .footer-info-group { display: flex; align-items: center; gap: var(--space-lg); }
+        .footer-info-group span { display: flex; align-items: center; gap: var(--space-sm); }
+        .footer i.fa-solid { color: #52525b; } 
+
+
+        /* --- 8. NOVOS ESTILOS DO DASHBOARD (Ajustes DARK MODE/SQUARE) --- */
+        
+        #addQuickAccessButton, #toggleEditButton {
+            width: 50px; /* Aumentado um pouco para visibilidade flutuante */
+            height: 50px; /* Aumentado um pouco para visibilidade flutuante */
+            border: none;
+            border-radius: 50%; /* Torna os botões flutuantes redondos */
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background-color var(--transition-fast), transform var(--transition-fast);
+            box-shadow: var(--shadow-md); /* Sombra mais forte para flutuar */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Botões Darks */
+            background-color: var(--color-content-bg); /* Fundo Escuro */
+            color: var(--color-text-primary); /* Ícone Claro */
+            border: 1px solid var(--color-border);
+        }
+
+        #addQuickAccessButton i {
+             color: var(--color-primary); /* Icone de + na cor primária */
+        }
+
+        #addQuickAccessButton:hover {
+            background-color: #383838; /* Um pouco mais claro no hover */
+            transform: scale(1.05);
+            border-color: var(--color-primary);
+        }
+        
+        /* Botão de Edição (Toggle) */
+        #toggleEditButton i {
+            color: var(--color-danger); /* Ícone de - na cor danger */
+        }
+
+        /* Mudar cor no modo de Edição (para indicar que está ativo) */
+        #toggleEditButton.editing {
+            background-color: var(--color-primary); /* Fundo Primário quando ativo */
+            color: #121212; /* Texto escuro */
+            border-color: var(--color-primary-light);
+        }
+
+        #toggleEditButton.editing i {
+            color: #121212; /* Ícone escuro (Checkmark) */
+        }
+        
+        #toggleEditButton:not(.editing):hover {
+            background-color: #383838; 
+            transform: scale(1.05);
+            border-color: var(--color-danger);
+        }
+
+        /* Layout Acesso Rápido: Robusto usando Grid */
+        .quick-access-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl); 
+        }
+        
+        .quick-access-card {
+            background-color: var(--color-content-bg);
+            border-radius: var(--border-radius-md);
+            padding: var(--space-md) var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: column; 
+            text-align: center;
+            text-decoration: none;
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            animation: fadeIn 0.5s ease-out;
+            border-left: 5px solid var(--color-primary); 
+            border: 1px solid var(--color-border); 
+            position: relative; /* Necessário para o botão X */
+        }
+
+        .quick-access-card:hover:not(.jiggle) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary); 
+            background-color: #383838; 
+        }
+        
+        /* Botão de Deletar (X) */
+        .delete-card-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--color-danger);
+            color: white;
+            border: 2px solid var(--color-content-bg);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        
+        .quick-access-card.jiggle .delete-card-btn {
+            opacity: 1;
+        }
+        
+        /* Estilos do Modo de Edição (Jiggle/Chacoalhar) */
+        .quick-access-card.jiggle {
+            animation: jiggle 0.3s infinite alternate;
+        }
+
+        /* Removendo a animação de hover no modo de edição */
+        .quick-access-card.jiggle:hover {
+             transform: none;
+        }
+
+
+        /* Ajuste de cards (mantido) */
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+
+        .card-info h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .card-info p {
+            display: none; 
+        }
+
+        .card-icon-wrapper {
+            font-size: 1.5rem;
+            color: var(--color-primary); 
+            padding: var(--space-sm);
+            border-radius: var(--border-radius-sm); 
+            background-color: rgba(255, 255, 255, 0.05); 
+        }
+
+        /* Estilos do Conteúdo Principal */
+        #main-content-area {
+            display: flex; 
+            flex-wrap: wrap; 
+            align-items: flex-start; 
+            gap: var(--space-xl);
+            padding: var(--space-lg) 0;
+            background: none;
+            box-shadow: none;
+            min-height: 200px; /* Para melhor visualização quando vazio */
+        }
+
+        /* Modal de Adição de Menu (Ajustado) */
+        #addMenuModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* REMOVENDO MAX-HEIGHT E OVERFLOW-Y PARA EVITAR BARRA DE ROLAGEM */
+        .menu-modal-content {
+            background-color: var(--color-content-bg);
+            padding: var(--space-lg) var(--space-xl);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 600px;
+            /* max-height: 80vh; <--- REMOVIDO */
+            /* overflow-y: auto; <--- REMOVIDO */
+            border: 1px solid var(--color-border);
+        }
+        
+        .available-menus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: var(--space-md);
+            margin-top: var(--space-sm); /* Reduzido o espaço após remover o h3 */
+        }
+        
+        .menu-option-card {
+            background-color: #383838;
+            padding: var(--space-md);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: background-color var(--transition-fast), transform var(--transition-fast);
+            border: 2px solid transparent;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .menu-option-card:hover {
+            background-color: #4b4b4b;
+        }
+        
+        .menu-option-card.selected {
+            border-color: var(--color-primary);
+            background-color: var(--color-sidebar-active-bg);
+        }
+        
+        .menu-option-card i.fa-solid {
+            font-size: 1.2rem;
+            margin-bottom: var(--space-sm);
+            color: var(--color-primary-light);
+        }
+
+
+        /* --- 9. UTILITIES & ANIMATIONS (Mantido + Jiggle) --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes jiggle {
+          0% { transform: rotate(0.5deg); }
+          50% { transform: rotate(-0.5deg); }
+          100% { transform: rotate(0.5deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- 10. NOVO COMPONENTE: Calendário Minimalista --- */
+#minimalist-calendar {
+    position: fixed;
+    bottom: calc(35px + var(--space-lg)); /* Alinhado com os botões flutuantes */
+    right: var(--space-lg); /* Movido para a direita */
+    z-index: 999; /* Abaixo dos botões flutuantes e modal */
+    width: 280px;
+    background-color: var(--color-content-bg);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+    font-family: var(--font-family);
+    animation: fadeIn 0.5s ease-out; /* Reutiliza a animação existente */
+}
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .calendar-header h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .calendar-header button {
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            padding: var(--space-sm);
+            border-radius: var(--border-radius-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .calendar-header button:hover {
+            background-color: #383838;
+            color: var(--color-text-primary);
+        }
+
+        .calendar-body {
+            display: grid;
+            gap: var(--space-sm);
+        }
+
+        .calendar-weekdays, .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--space-xs);
+            text-align: center;
+        }
+
+        .calendar-weekdays span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+        }
+
+        .calendar-days span {
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: var(--space-sm) 0;
+            border-radius: 50%; /* Células redondas */
+            cursor: default;
+            transition: background-color var(--transition-fast);
+        }
+
+        .calendar-days span.day-cell:hover {
+            background-color: #383838;
+        }
+
+        .calendar-days span.current-day {
+            background-color: var(--color-primary);
+            color: #121212;
+            font-weight: 700;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="header-title-group">
+                    <i class="fa-solid fa-cog header-gear-icon"></i>
+                    <h2>PROCESSOS</h2>
+                </div>
+                <p>Engenharia de Processos</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a href="processos.html" class="menu-link active"><i class="fa-solid fa-chart-pie"></i>Dashboard</a></li>
+                <li><a href="ordem_monitor.html" class="menu-link"><i class="fa-solid fa-clipboard-list"></i>Ordens de Produção</a></li>
+                <li><a href="producao_apontada.html" class="menu-link"><i class="fa-solid fa-industry"></i>Produção por Setor</a></li>
+                
+                <li>
+                    <a class="dropdown-btn">
+                        <i class="fa-solid fa-book"></i>Relatórios
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </a>
+                    <div class="dropdown-container">
+                        <a href="Clientes.html" class="menu-link"><i class="fa-solid fa-users"></i>Clientes</a>
+                        <a href="itens.html" class="menu-link"><i class="fa-solid fa-box-archive"></i>Itens</a>
+                    </div>
+                </li>
+
+                <li><a href="faturamentodetalhado.html" class="menu-link"><i class="fa-solid fa-file-invoice-dollar"></i>Faturamento</a></li>
+                
+                <li>
+                    <a class="dropdown-btn">
+                        <i class="fa-solid fa-brush"></i>Acabamento
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </a>
+                    <div class="dropdown-container">
+                        <a href="acabinterno.html" class="menu-link"><i class="fa-solid fa-warehouse"></i>Interno</a>
+                        <a href="terceiro.html" class="menu-link"><i class="fa-solid fa-truck-ramp-box"></i>Externo</a>
+                    </div>
+                </li>
+                <li><a href="aderencia.html" class="menu-link"><i class="fa-solid fa-check-to-slot"></i>Aderência</a></li>
+                <li><a href="refugo.html" class="menu-link"><i class="fa-solid fa-trash-can"></i>Refugo</a></li>
+                
+                <li><a href="carteira.html" class="menu-link"><i class="fa-solid fa-briefcase"></i>Carteira</a></li>
+                
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <div class="search-container">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="CTRL + F para buscar tela..." autocomplete="off">
+                        <div id="suggestions-box"></div>
+                    </div>
+                    <div class="header-actions">
+                        <a href="#" class="header-icon"><i class="fa-solid fa-bell"></i></a>
+                        <a href="#" class="header-icon"><i class="fa-solid fa-circle-question"></i></a>
+                        </div>
+                </header>
+                
+                <div class="quick-access-grid" id="quickAccessGrid">
+                    </div>
+                
+                <div id="main-content-area">
+                    </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="chart-tooltip"></div>
+    
+    <div id="minimalist-calendar">
+        <div class="calendar-header">
+            <button id="cal-prev"><i class="fa-solid fa-chevron-left"></i></button>
+            <h5 id="cal-month-year"></h5>
+            <button id="cal-next"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="calendar-body">
+            <div class="calendar-weekdays">
+                <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+            </div>
+            <div class="calendar-days" id="cal-days"></div>
+        </div>
+    </div>
+    
+    <div class="floating-actions">
+        <button id="toggleEditButton" title="Editar Acessos Rápidos"><i class="fa-solid fa-minus"></i></button>
+        <button id="addQuickAccessButton" title="Adicionar Menu de Acesso Rápido"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    
+
+    <div id="addMenuModal" class="color-picker-modal">
+        <div class="menu-modal-content">
+            <div class="available-menus-grid" id="availableMenusGrid">
+                </div>
+            <button id="saveMenuChanges" class="btn-principal" style="width: 100%; margin-top: var(--space-lg);">Salvar Alterações</button>
+        </div>
+    </div>
+
+
+    <footer class="footer">
+        <div class="footer-info-group">
+            <span><i class="fa-solid fa-phone"></i> (48) 99652-0767</span>
+            <span><i class="fa-solid fa-envelope"></i> brasil.hyuri@gmail.com</span>
+        </div>
+        <div class="footer-info-group">
+            <span><i class="fa-solid fa-user"></i> USUARIO: COMUM</span>
+            <span><i class="fa-solid fa-code-branch"></i> v0.0.0.1</span>
+        </div>
+        <div class="footer-info-group footer-datetime">
+            <span id="footer-day"></span>
+            <span id="footer-date"></span>
+            <span id="footer-time"></span>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const dropdownBtns = document.querySelectorAll(".dropdown-btn");
+            const searchInput = document.getElementById('searchInput');
+            const suggestionsBox = document.getElementById('suggestions-box');
+            
+            // Elementos de Acesso Rápido
+            const quickAccessGrid = document.getElementById('quickAccessGrid');
+            const addQuickAccessButton = document.getElementById('addQuickAccessButton');
+            const toggleEditButton = document.getElementById('toggleEditButton');
+            const addMenuModal = document.getElementById('addMenuModal');
+            const availableMenusGrid = document.getElementById('availableMenusGrid');
+            const saveMenuChangesButton = document.getElementById('saveMenuChanges');
+            
+            const QUICK_ACCESS_STORAGE_KEY = 'quickAccessLinks_machine';
+            let isEditing = false;
+            let focusedSuggestionIndex = -1;
+
+            // Mapeamento de Cores para Ícones de Acesso Rápido (Estilo CSS que não pode ser usado no JS)
+            const iconColorMap = {
+                'carteira': 'var(--color-warning)',
+                'faturamento': 'var(--color-success)',
+                'acabamentoexterno': '#c4b5fd', // Roxo (Antigo Acabamento)
+                'acabamentointerno': '#c4b5fd', // Roxo (Novo Acabamento)
+                'refugo': 'var(--color-danger)',
+                'relatorioclientes': 'var(--color-primary)',
+                'relatorioitens': '#5eead4', // Ciano/Verde
+                'dashboard': 'var(--color-primary-light)',
+                'ordensproducao': 'var(--color-text-primary)',
+                'desenvolvimento': '#f97316', // Laranja
+                'aderencia': '#22c55e', // Verde claro
+                'producaosetor': '#a855f7', // Violeta
+                'fichaitem': '#e879f9', // Rosa forte
+                'fichacliente': '#3b82f6', // Azul forte
+            };
+
+            // 1. Definição de TODOS os links do sistema
+            const allAvailableLinks = [
+                { id: 'dashboard', title: 'Dashboard', url: 'processos.html', icon: 'fa-chart-pie' },
+                { id: 'ordensproducao', title: 'Ordens de Produção', url: 'monitoraproducao.html', icon: 'fa-clipboard-list' }, 
+                { id: 'desenvolvimento', title: 'Desenvolvimento', url: 'controlemodelos.html', icon: 'fa-code' }, 
+                { id: 'faturamento', title: 'Faturamento', url: 'faturamentodetalhado.html', icon: 'fa-file-invoice-dollar' },
+                // NOVOS LINKS DE ACABAMENTO
+                { id: 'acabamentoexterno', title: 'Acabamento > Externo', url: 'terceiro.html', icon: 'fa-truck-ramp-box' },
+                { id: 'acabamentointerno', title: 'Acabamento > Interno', url: 'acabinterno.html', icon: 'fa-warehouse' },
+                // FIM NOVOS LINKS
+                { id: 'aderencia', title: 'Aderência', url: 'aderencia.html', icon: 'fa-check-to-slot' },
+                { id: 'refugo', title: 'Refugo', url: 'refugo.html', icon: 'fa-trash-can' },
+                { id: 'carteira', title: 'Carteira', url: 'carteira.html', icon: 'fa-briefcase' },
+                { id: 'fichaitem', title: 'Ficha de Avaliação > Item', url: 'ficha_item.html', icon: 'fa-file-signature' },
+                { id: 'fichacliente', title: 'Ficha de Avaliação > Cliente', url: 'avaliacao_cliente.html', icon: 'fa-file-invoice' },
+                { id: 'relatorioclientes', title: 'Relatórios > Clientes', url: 'Clientes.html', icon: 'fa-users' },
+                { id: 'relatorioitens', title: 'Relatórios > Itens', url: 'itens.html', icon: 'fa-box-archive' },
+                { id: 'producaosetor', title: 'Produção por Setor', url: 'producao_apontada.html', icon: 'fa-industry' }
+            ];
+
+            // 2. Padrão de primeira entrada (os 6 links nativos) - Acabamento agora é Acabamento > Externo
+            const defaultQuickAccessIds = [
+                'carteira', 'faturamento', 'acabamentoexterno', 
+                'refugo', 'relatorioclientes', 'relatorioitens'
+            ];
+            
+            // Mapeia os IDs nativos para os objetos de link completos
+            const defaultQuickAccessLinks = defaultQuickAccessIds.map(id => {
+                const link = allAvailableLinks.find(l => l.id === id);
+                // Ajusta o título para o formato simplificado para exibição no card
+                if (link && link.title.includes(' > ')) {
+                    return { ...link, title: link.title.split(' > ').pop() };
+                }
+                return link;
+            }).filter(Boolean); // Remove qualquer link nulo caso o ID esteja errado
+
+
+            // --- Lógica de Acesso Rápido ---
+
+            function saveQuickAccessLinks(links) {
+                // Salva apenas os dados essenciais
+                const dataToSave = links.map(link => ({
+                    id: link.id,
+                    title: link.title,
+                    url: link.url,
+                    icon: link.icon
+                }));
+                localStorage.setItem(QUICK_ACCESS_STORAGE_KEY, JSON.stringify(dataToSave));
+            }
+
+            function loadQuickAccessLinks() {
+                const savedLinks = localStorage.getItem(QUICK_ACCESS_STORAGE_KEY);
+                if (savedLinks) {
+                    try {
+                        return JSON.parse(savedLinks);
+                    } catch (e) {
+                        console.error("Erro ao carregar links rápidos do localStorage:", e);
+                        localStorage.removeItem(QUICK_ACCESS_STORAGE_KEY);
+                    }
+                }
+                
+                // Se não há dados salvos ou houve erro: Salva e retorna o padrão (Nativo)
+                saveQuickAccessLinks(defaultQuickAccessLinks);
+                return defaultQuickAccessLinks;
+            }
+
+            function renderQuickAccessCards() {
+                quickAccessGrid.innerHTML = '';
+                const links = loadQuickAccessLinks();
+                
+                links.forEach(link => {
+                    const card = document.createElement('a');
+                    card.href = isEditing ? 'javascript:void(0)' : link.url;
+                    card.classList.add('quick-access-card');
+                    card.setAttribute('data-id', link.id);
+                    
+                    if (isEditing) {
+                        card.classList.add('jiggle');
+                    } else {
+                        card.classList.remove('jiggle');
+                    }
+                    
+                    // Define a cor do ícone
+                    const iconColor = iconColorMap[link.id] || 'var(--color-primary)';
+
+                    // Conteúdo do Card
+                    card.innerHTML = `
+                        <div class="card-info">
+                            <h4>${link.title}</h4>
+                        </div>
+                        <div class="card-icon-wrapper" style="color: ${iconColor};">
+                            <i class="fa-solid ${link.icon}"></i>
+                        </div>
+                        <button class="delete-card-btn" data-id="${link.id}"><i class="fa-solid fa-xmark"></i></button>
+                    `;
+                    
+                    const deleteBtn = card.querySelector('.delete-card-btn');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteQuickAccessCard(link.id);
+                    });
+                    
+                    quickAccessGrid.appendChild(card);
+                });
+            }
+            
+            function deleteQuickAccessCard(id) {
+                let links = loadQuickAccessLinks();
+                links = links.filter(link => link.id !== id);
+                saveQuickAccessLinks(links);
+                renderQuickAccessCards(); // Re-renderiza para refletir a exclusão
+            }
+
+            function toggleEditMode() {
+                isEditing = !isEditing;
+                
+                // Atualiza o botão de edição (ícone e cor)
+                toggleEditButton.querySelector('i').className = isEditing ? 'fa-solid fa-check' : 'fa-solid fa-minus';
+                toggleEditButton.classList.toggle('editing', isEditing);
+
+                // Aplica/Remove o modo jiggle e desativa a navegação dos links
+                document.querySelectorAll('.quick-access-card').forEach(card => {
+                    if (isEditing) {
+                        card.classList.add('jiggle');
+                        card.href = 'javascript:void(0)'; // Desabilita a navegação
+                    } else {
+                        card.classList.remove('jiggle');
+                        // Restaura a URL original (procurando no allAvailableLinks)
+                        const linkData = allAvailableLinks.find(l => l.id === card.getAttribute('data-id'));
+                        if (linkData) card.href = linkData.url;
+                    }
+                });
+                
+                // Força a re-renderização completa para garantir que o estado do Jiggle/Delete Button esteja correto
+                renderQuickAccessCards(); 
+            }
+            
+            toggleEditButton.addEventListener('click', toggleEditMode);
+            
+            // --- Lógica do Modal de Adição/Edição ---
+            
+            function renderMenuModalOptions() {
+                availableMenusGrid.innerHTML = '';
+                const currentLinksIds = loadQuickAccessLinks().map(link => link.id);
+
+                allAvailableLinks.forEach(menu => {
+                    const isSelected = currentLinksIds.includes(menu.id);
+                    const card = document.createElement('div');
+                    card.classList.add('menu-option-card');
+                    card.setAttribute('data-id', menu.id);
+                    if (isSelected) card.classList.add('selected');
+                    
+                    // Usa o ícone do mapa de cores para o preview
+                    const iconColor = iconColorMap[menu.id] || 'var(--color-primary)';
+
+                    // Exibe o título simplificado no modal
+                    const simpleTitle = menu.title.includes(' > ') ? menu.title.split(' > ').pop() : menu.title;
+
+                    card.innerHTML = `
+                        <i class="fa-solid ${menu.icon}" style="color: ${iconColor};"></i>
+                        <span>${simpleTitle}</span>
+                    `;
+
+                    card.addEventListener('click', () => {
+                        card.classList.toggle('selected');
+                    });
+                    availableMenusGrid.appendChild(card);
+                });
+            }
+
+            addQuickAccessButton.addEventListener('click', () => {
+                renderMenuModalOptions();
+                addMenuModal.style.display = 'flex';
+                // Garante que o modo de edição está desativado antes de abrir o modal
+                if (isEditing) toggleEditMode(); 
+            });
+
+            saveMenuChangesButton.addEventListener('click', () => {
+                const selectedCards = document.querySelectorAll('.menu-modal-content .menu-option-card.selected');
+                const newQuickLinks = [];
+                
+                selectedCards.forEach(card => {
+                    const id = card.getAttribute('data-id');
+                    const linkData = allAvailableLinks.find(link => link.id === id);
+                    
+                    if (linkData) {
+                        // Ajusta o título para o formato simplificado antes de salvar para exibição no card
+                        const simpleTitle = linkData.title.includes(' > ') ? linkData.title.split(' > ').pop() : linkData.title;
+                        newQuickLinks.push({ ...linkData, title: simpleTitle });
+                    }
+                });
+
+                saveQuickAccessLinks(newQuickLinks);
+                addMenuModal.style.display = 'none';
+                renderQuickAccessCards();
+            });
+            
+            // Fecha o modal ao clicar fora do conteúdo
+            addMenuModal.addEventListener('click', (e) => {
+                if (e.target.id === 'addMenuModal') {
+                    addMenuModal.style.display = 'none';
+                }
+            });
+
+            // --- Inicialização ---
+            renderQuickAccessCards();
+            
+            // --- Lógica de Busca e Dropdown (Mantida) ---
+
+            const availableScreens = allAvailableLinks.map(link => ({
+                title: link.title,
+                url: link.url
+            }));
+
+            dropdownBtns.forEach(btn => {
+                btn.addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const dropdownContent = this.nextElementSibling;
+                    dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
+                });
+            });
+
+            function handleSearchInput(e) {
+                const query = e.target.value.toLowerCase();
+                suggestionsBox.innerHTML = '';
+                focusedSuggestionIndex = -1;
+                if (query.length > 0) {
+                    const filteredScreens = availableScreens.filter(screen => screen.title.toLowerCase().includes(query));
+                    if (filteredScreens.length > 0) {
+                        suggestionsBox.style.display = 'block';
+                        filteredScreens.forEach(screen => {
+                            const item = document.createElement('div');
+                            item.classList.add('suggestion-item');
+                            item.textContent = screen.title;
+                            item.addEventListener('click', () => { window.location.href = screen.url; });
+                            suggestionsBox.appendChild(item);
+                        });
+                    } else {
+                       suggestionsBox.style.display = 'none';
+                    }
+                } else {
+                    suggestionsBox.style.display = 'none';
+                }
+            }
+
+            function highlightSuggestion(index) {
+                const suggestions = suggestionsBox.querySelectorAll('.suggestion-item');
+                if (suggestions.length === 0) return;
+
+                const currentActive = suggestionsBox.querySelector('.suggestion-active');
+                if (currentActive) currentActive.classList.remove('suggestion-active');
+                
+                if (index >= suggestions.length) index = 0;
+                if (index < 0) index = suggestions.length - 1;
+
+                suggestions[index].classList.add('suggestion-active');
+                suggestions[index].scrollIntoView({ block: 'nearest' });
+                focusedSuggestionIndex = index;
+            }
+
+            function handleSearchNavigation(e) {
+                const suggestions = suggestionsBox.querySelectorAll('.suggestion-item');
+                if (suggestions.length === 0 || suggestionsBox.style.display === 'none') return;
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                    case 'Tab':
+                        e.preventDefault();
+                        highlightSuggestion(focusedSuggestionIndex + 1);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        highlightSuggestion(focusedSuggestionIndex - 1);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        const focused = suggestionsBox.querySelector('.suggestion-active');
+                        if (focused) focused.click();
+                        break;
+                    case 'Escape':
+                        suggestionsBox.style.display = 'none';
+                        break;
+                }
+            }
+            
+            searchInput.addEventListener('input', handleSearchInput);
+            searchInput.addEventListener('keydown', handleSearchNavigation);
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) suggestionsBox.style.display = 'none';
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+            
+            // --- Lógica do Rodapé (Data e Hora) ---
+            function updateFooterDateTime() {
+                const dayEl = document.getElementById('footer-day');
+                const dateEl = document.getElementById('footer-date');
+                const timeEl = document.getElementById('footer-time');
+                const now = new Date();
+                
+                const options = { weekday: 'long' };
+                let dayOfWeek = now.toLocaleDateString('pt-BR', options);
+                dayOfWeek = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+
+                dayEl.textContent = dayOfWeek;
+                dateEl.textContent = now.toLocaleDateString('pt-BR');
+                timeEl.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            }
+            setInterval(updateFooterDateTime, 1000);
+            updateFooterDateTime();
+
+            // --- Lógica do Calendário Minimalista ---
+            const calMonthYear = document.getElementById('cal-month-year');
+            const calDays = document.getElementById('cal-days');
+            const calPrev = document.getElementById('cal-prev');
+            const calNext = document.getElementById('cal-next');
+
+            let currentDate = new Date();
+
+            function renderCalendar() {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0-6 (Dom-Sab)
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                calMonthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', {
+                    month: 'long',
+                    year: 'numeric'
+                }).replace(/^\w/, c => c.toUpperCase());
+
+                calDays.innerHTML = '';
+
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    calDays.innerHTML += '<span></span>';
+                }
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayCell = document.createElement('span');
+                    dayCell.textContent = i;
+                    dayCell.classList.add('day-cell');
+                    
+                    const cellDate = new Date(year, month, i);
+                    cellDate.setHours(0,0,0,0);
+                    
+                    if (cellDate.getTime() === today.getTime()) {
+                        dayCell.classList.add('current-day');
+                    }
+                    calDays.appendChild(dayCell);
+                }
+            }
+
+            calPrev.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            calNext.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Rendimento Metalúrgico</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* === PALETA ORACLE SQL DARK (AMARELO QUEIMADO) === */
+        :root {
+            /* Tons de Cinza Escuro (Mais Pretos) */
+            --primary-bg: #101014;    
+            --secondary-bg: #1c1c20;  
+            --accent-bg: #2a2a30;     
+            --border-color: #4a4a50;  
+            
+            /* Tons de Texto (Alta Visibilidade) */
+            --text-primary: #f0f0f0;   
+            --text-secondary: #b0b0b0; 
+            --text-dark: #000000;      
+
+            /* Cores de Destaque (Amarelo Queimado) */
+            --primary-accent: #cc9900;       
+            --primary-accent-dark: #aa8000; 
+            
+            /* Cores da Tabela */
+            --table-header-bg: #25252a;
+            --table-row-odd-bg: #222226; 
+            --table-row-even-bg: var(--secondary-bg); 
+            --table-hover-bg: var(--primary-accent);
+            --table-hover-text: var(--text-dark);
+            
+            /* Inputs */
+            --input-bg: var(--primary-bg);
+            --input-border: var(--border-color);
+            
+            /* Botões */
+            --button-bg: var(--accent-bg); /* Cinza escuro padrão */
+            --button-hover-bg: var(--border-color); /* Cinza mais claro hover */
+
+            /* Cor de Destaque para Produção */
+            --highlight-prod-bg: #2a3a5e;  /* Azul Escuro */
+            --highlight-prod-border: #5a7edc; /* Azul Claro (Borda) */
+        }
+
+        /* --- Reset Básico e Tema Dark --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* NOVO: Trava o scroll do body quando o modal está aberto */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* Design do Cabeçalho da Página */
+        header {
+            background-color: var(--accent-bg);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            border-bottom: 2px solid var(--primary-accent);
+            z-index: 1000; 
+            position: relative;
+        }
+        .header-title-group h1 {
+            margin: 0;
+            font-size: 1.8em;
+            letter-spacing: 0.5px;
+        }
+        .header-title-group p {
+            margin-top: 2px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+        .header-buttons {
+            display: flex;
+            align-items: center; 
+            gap: 15px;
+        }
+        
+        /* Estilos Unificados para Botões */
+        .btn-voltar, .file-label {
+            text-decoration: none;
+            padding: 10px 20px; 
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: inherit; 
+            font-size: 0.9em; 
+            transition: background-color 0.2s, color 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--button-bg);
+            color: var(--text-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.0; 
+            box-sizing: border-box; 
+            vertical-align: middle; 
+        }
+        .btn-voltar:hover, .file-label:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        /* --- Container Principal --- */
+        .container {
+            background-color: var(--primary-bg);
+            padding: 30px;
+            max-width: 1600px;
+            margin: 20px auto;
+        }
+
+        /* --- Barra de Controles --- */
+        .filter-bar {
+            background-color: var(--secondary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between; 
+            border: 1px solid var(--border-color);
+        }
+        .filter-bar-start {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .filter-bar-end-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #fileInput, #prodInput {
+            display: none;
+        }
+
+        #fileName {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        #importButton {
+            padding: 10px 22px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: var(--text-dark);
+            background-color: var(--primary-accent);
+            border: 1px solid var(--primary-accent);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit; 
+            line-height: 1.0;
+        }
+
+        #importButton:hover {
+            background-color: var(--primary-accent-dark);
+            border-color: var(--primary-accent-dark);
+        }
+
+        /* --- PAINÉIS DE RESUMO --- */
+        .summary-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-panel {
+            background-color: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+        
+        .summary-panel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            background-color: var(--accent-bg);
+        }
+
+        .summary-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .summary-panel .count {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        #panel-total      { border-left-color: var(--primary-accent); }
+        #panel-production { border-left-color: var(--highlight-prod-border); }
+        #panel-low        { border-left-color: #dc3545; }
+        #panel-mid        { border-left-color: #ffc107; }
+        #panel-high       { border-left-color: #28a745; }
+
+        .summary-panel.panel-active {
+            background-color: var(--accent-bg);
+            box-shadow: 0 0 15px rgba(204, 153, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* === Filtro de Mês === */
+        .month-filter-container {
+            background-color: var(--secondary-bg);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .month-filter-container label {
+            font-weight: bold;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        #monthFilter {
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 0.9em;
+            min-width: 200px;
+        }
+        #monthFilter:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 5px rgba(204, 153, 0, 0.3);
+        }
+
+        /* --- Container da Tabela --- */
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color); 
+            padding: 14px 18px;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 0.9em;
+        }
+
+        th {
+            background-color: var(--table-header-bg); 
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            font-size: 13px;
+        }
+
+        tbody td {
+            color: var(--text-primary);
+        }
+
+        tbody tr:nth-child(odd) {
+             background-color: var(--table-row-odd-bg); 
+        }
+        tbody tr:nth-child(even) {
+            background-color: var(--table-row-even-bg);
+        }
+
+        tbody tr:hover {
+            background-color: var(--table-hover-bg); 
+            color: var(--table-hover-text);
+        }
+        
+        .rendimento-cell {
+            color: var(--primary-accent);
+            font-weight: 700;
+        }
+        
+        .codigo-peca-cell {
+            color: var(--primary-accent);
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* === Destaque da Linha em Produção === */
+        .row-in-production td {
+            background-color: var(--highlight-prod-bg) !important;
+            border-top: 1px solid var(--highlight-prod-border); 
+            border-bottom: 1px solid var(--highlight-prod-border);
+            color: var(--text-primary) !important;
+        }
+        .row-in-production td.codigo-peca-cell {
+            color: var(--primary-accent) !important;
+            font-weight: 700;
+        }
+        
+        .row-in-production td:first-child {
+            border-left: 2px solid var(--highlight-prod-border);
+        }
+        .row-in-production td:last-child {
+            border-right: 2px solid var(--highlight-prod-border);
+        }
+
+        tbody tr.row-in-production:hover td {
+            background-color: var(--table-hover-bg) !important;
+            color: var(--table-hover-text) !important;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        /* === MODIFICADO: ESTILOS DO MODAL (TELA CHEIA) === */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; /* Backdrop não rola */
+            background-color: rgba(0,0,0,0.7); 
+            /* REMOVIDO: padding-top: 60px; */
+        }
+
+        .modal-content {
+            background-color: var(--secondary-bg);
+            /* REMOVIDO: margin, max-width, border, border-top, border-radius, box-shadow */
+            margin: 0;
+            padding: 40px 60px; /* Mais padding para tela cheia */
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box; /* Garante que o padding não estoure 100% */
+            overflow-y: auto; /* Permite rolagem DO MODAL se o conteúdo for muito grande */
+        }
+
+        .modal-close {
+            color: var(--text-secondary);
+            position: absolute;
+            /* MODIFICADO: Posição e tamanho */
+            top: 30px;
+            right: 45px;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary-accent);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        #modalBody {
+            display: grid;
+            /* MODIFICADO: 3 colunas para usar melhor o espaço */
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 15px 25px; 
+            /* REMOVIDO: max-height e overflow-y */
+            padding-top: 10px;
+        }
+
+        .modal-info-item {
+            background-color: var(--accent-bg);
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 3px solid var(--border-color);
+        }
+
+        .modal-info-label {
+            display: block;
+            font-size: 0.8em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .modal-info-value {
+            display: block;
+            font-size: 1.1em;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title-group">
+            <h1>ANÁLISE DE RENDIMENTO METALÚRGICO</h1>
+            <p>Importação e Análise de Dados TXT</p>
+        </div>
+        <div class="header-buttons">
+            <a href="processos.html" class="btn-voltar">Voltar</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="filter-bar">
+            <div class="filter-bar-start">
+                <label for="fileInput" class="file-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Selecionar Arquivo .txt</span>
+                </label>
+                <input type="file" id="fileInput" accept=".txt">
+                <span id="fileName">Nenhum arquivo selecionado</span>
+            </div>
+
+            <div class="filter-bar-end-buttons">
+                <label for="prodInput" class="file-label" id="prodLabel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="8" height="8" x="2" y="2" rx="2"/><path d="M14 2h6a2 2 0 0 1 2 2v6"/><path d="M14 14h6a2 2 0 0 1 2 2v6"/><path d="M2 14h6a2 2 0 0 1 2 2v6"/><path d="m7 7 2 2 4-4"/>
+                    </svg>
+                    <span>Declarar Produção</span>
+                </label>
+                <input type="file" id="prodInput" accept=".xlsx, .xls">
+                
+                <button id="importButton">Importar Dados</button>
+            </div>
+        </div>
+
+        <div class="summary-panels">
+            <div class="summary-panel panel-active" id="panel-total" data-filter="all">
+                <h3>Total de Peças (Únicas)</h3>
+                <span class="count" id="count-total">0</span>
+            </div>
+            
+            <div class="summary-panel" id="panel-production" data-filter="production">
+                <h3>Em Produção</h3>
+                <span class="count" id="count-production">0</span>
+            </div>
+
+            <div class="summary-panel" id="panel-low" data-filter="low">
+                <h3>Rendimento &lt;= 50%</h3>
+                <span class="count" id="count-low">0</span>
+            </div>
+            <div class="summary-panel" id="panel-mid" data-filter="mid">
+                <h3>Rendimento 50% - 75%</h3>
+                <span class="count" id="count-mid">0</span>
+            </div>
+            <div class="summary-panel" id="panel-high" data-filter="high">
+                <h3>Rendimento &gt; 75%</h3>
+                <span class="count" id="count-high">0</span>
+            </div>
+        </div>
+
+        <div class="month-filter-container">
+            <label for="monthFilter">Filtrar por Mês:</label>
+            <select id="monthFilter">
+                <option value="all">Todos os Meses</option>
+            </select>
+        </div>
+
+
+        <div id="tableContainer" class="table-container">
+            <p style="padding: 20px; text-align: center;">Por favor, importe um arquivo .txt para começar.</p>
+        </div>
+    </div>
+
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Detalhes do Item</h2>
+            <div id="modalBody">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const importButton = document.getElementById('importButton');
+            const fileInput = document.getElementById('fileInput');
+            const tableContainer = document.getElementById('tableContainer');
+            const fileNameSpan = document.getElementById('fileName');
+            const prodInput = document.getElementById('prodInput');
+
+            const panels = document.querySelectorAll('.summary-panel');
+            const countTotal = document.getElementById('count-total');
+            const countProduction = document.getElementById('count-production'); 
+            const countLow = document.getElementById('count-low');
+            const countMid = document.getElementById('count-mid');
+            const countHigh = document.getElementById('count-high');
+
+            const monthFilterSelect = document.getElementById('monthFilter');
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+            // --- Referências do Modal ---
+            const modal = document.getElementById('itemModal');
+            const modalBody = document.getElementById('modalBody');
+            const modalCloseBtn = document.querySelector('.modal-close');
+
+            const headers = [
+                "data", "op", "pedido", "cliente", "código peça", "material",
+                "quant. figuras", "peso un", "peso molde", "quant. produzida",
+                "corrida", "lote", "quant. moldes", "peso total", 
+                "peso molde total", "rend. metalurgico", "relação molde x metal"
+            ];
+            
+            const hiddenColumns = [
+                "pedido", "corrida", "lote", "op", "cliente", 
+                "material", "quant. figuras", "peso molde", "quant. moldes", "peso molde total"
+            ];
+
+            const rendimentoIndex = headers.indexOf("rend. metalurgico");
+            const codigoPecaIndex = headers.indexOf("código peça"); 
+            const dataIndex = headers.indexOf("data");
+
+            let fullData = []; 
+            let productionCodes = new Set(); 
+            let currentFilter = 'all';
+            let currentMonthFilter = 'all';
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    fileNameSpan.textContent = fileInput.files[0].name;
+                    fileNameSpan.style.color = "var(--text-primary)";
+                } else {
+                    fileNameSpan.textContent = 'Nenhum arquivo selecionado';
+                    fileNameSpan.style.color = "var(--text-secondary)";
+                }
+            });
+
+            importButton.addEventListener('click', () => {
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert("Por favor, selecione um arquivo .txt primeiro.");
+                    return;
+                }
+                
+                fullData = [];
+                productionCodes.clear(); 
+                currentFilter = 'all';
+                currentMonthFilter = 'all';
+                monthFilterSelect.value = 'all';
+
+                Papa.parse(file, {
+                    delimiter: ",", 
+                    header: false,
+                    skipEmptyLines: true,
+                    encoding: "UTF-8",
+                    complete: (results) => {
+                        let parsedData = results.data.filter(row => row.length === headers.length);
+                        
+                        parsedData.sort((rowA, rowB) => {
+                            const rendA = getRendimento(rowA);
+                            const rendB = getRendimento(rowB);
+                            if (rendA === null && rendB === null) return 0;
+                            if (rendA === null) return -1;
+                            if (rendB === null) return 1; 
+                            return rendA - rendB; 
+                        });
+
+                        if (rendimentoIndex === -1 || codigoPecaIndex === -1 || dataIndex === -1) {
+                            alert("Erro: Coluna essencial (data, código peça ou rend. metalurgico) não encontrada.");
+                            return;
+                        }
+
+                        const seenCodigos = new Set();
+                        const uniqueData = [];
+                        for (const row of parsedData) {
+                            const codigo = row[codigoPecaIndex];
+                            if (!seenCodigos.has(codigo)) {
+                                seenCodigos.add(codigo);
+                                uniqueData.push(row);
+                            }
+                        }
+                        fullData = uniqueData; 
+
+                        populateMonthFilter();
+                        updatePanelsAndTable();
+                    },
+                    error: (error, file) => {
+                        alert("Erro ao ler o arquivo: " + error.message);
+                        console.error(error);
+                    }
+                });
+            });
+
+            prodInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = event.target.result;
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        productionCodes.clear(); 
+                        let count = 0;
+                        json.forEach(row => {
+                            if (row.length > 0 && row[0]) {
+                                productionCodes.add(String(row[0]).trim());
+                                count++;
+                            }
+                        });
+
+                        alert(`${count} códigos de produção carregados. Atualizando tabela...`);
+                        prodInput.value = ''; 
+                        updatePanelsAndTable();
+
+                    } catch (error) {
+                        console.error("Erro ao ler o arquivo Excel:", error);
+                        alert("Erro ao processar o arquivo Excel. Verifique o console.");
+                        prodInput.value = ''; 
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+
+            // --- MODIFICADO: Funções do Modal ---
+            function openModal(rowData) {
+                modalBody.innerHTML = '';
+                
+                headers.forEach((header, index) => {
+                    const value = rowData[index] || 'N/A';
+                    
+                    const itemHTML = `
+                        <div class="modal-info-item">
+                            <span class="modal-info-label">${header.toUpperCase()}</span>
+                            <span class="modal-info-value">${value}</span>
+                        </div>
+                    `;
+                    modalBody.innerHTML += itemHTML;
+                });
+                
+                modal.style.display = 'block';
+                // NOVO: Trava o scroll do body
+                document.body.classList.add('modal-open'); 
+            }
+
+            function closeModal() {
+                modal.style.display = 'none';
+                // NOVO: Libera o scroll do body
+                document.body.classList.remove('modal-open'); 
+            }
+
+            // --- Event Listeners do Modal ---
+            modalCloseBtn.onclick = closeModal;
+            window.onclick = (event) => {
+                // Fecha se clicar no fundo (o próprio .modal)
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+
+
+            function getRendimento(row) {
+                if (!row || row.length <= rendimentoIndex) {
+                    return null;
+                }
+                let valStr = String(row[rendimentoIndex]).replace('%', '').replace(',', '.').trim();
+                const value = parseFloat(valStr);
+                return isNaN(value) ? null : value;
+            }
+
+            function parseMonthYear(dateString) {
+                if (!dateString) return null;
+                const parts = dateString.split(/[\/\-]/);
+                let day, month, year;
+
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) { // YYYY-MM-DD
+                        year = parseInt(parts[0]);
+                        month = parseInt(parts[1]);
+                    } else if (parts[2].length === 4) { // DD/MM/YYYY
+                        year = parseInt(parts[2]);
+                        month = parseInt(parts[1]);
+                    }
+                }
+                
+                if (year && month && month >= 1 && month <= 12) {
+                    return `${monthNames[month - 1]}/${year}`; 
+                }
+                return null;
+            }
+
+            function populateMonthFilter() {
+                monthFilterSelect.innerHTML = '<option value="all">Todos os Meses</option>';
+                const months = new Set();
+                
+                fullData.forEach(row => {
+                    const monthYear = parseMonthYear(row[dataIndex]);
+                    if (monthYear) {
+                        months.add(monthYear);
+                    }
+                });
+
+                const sortedMonths = Array.from(months).sort((a, b) => {
+                    try {
+                        const [monthAStr, yearA] = a.split('/');
+                        const [monthBStr, yearB] = b.split('/');
+                        const dateA = new Date(yearA, monthNames.indexOf(monthAStr), 1);
+                        const dateB = new Date(yearB, monthNames.indexOf(monthBStr), 1);
+                        return dateA - dateB;
+                    } catch (e) {
+                        return 0;
+                    }
+                });
+
+                sortedMonths.forEach(monthYear => {
+                    const option = document.createElement('option');
+                    option.value = monthYear;
+                    option.textContent = monthYear;
+                    monthFilterSelect.appendChild(option);
+                });
+            }
+
+
+            function updatePanelsAndTable() {
+                let countL = 0;
+                let countM = 0;
+                let countH = 0;
+                let countP = 0; 
+                let filteredData = []; 
+                
+                const monthFilteredData = fullData.filter(row => {
+                    if (currentMonthFilter === 'all') return true;
+                    const rowMonthYear = parseMonthYear(row[dataIndex]);
+                    return rowMonthYear === currentMonthFilter;
+                });
+
+                monthFilteredData.forEach(row => {
+                    const rend = getRendimento(row);
+                    const codigoPeca = row[codigoPecaIndex];
+
+                    if (rend !== null) {
+                        if (rend <= 50) countL++;
+                        else if (rend > 50 && rend <= 75) countM++;
+                        else if (rend > 75) countH++;
+                    }
+
+                    if (codigoPeca && productionCodes.has(String(codigoPeca).trim())) {
+                        countP++;
+                    }
+
+                    switch (currentFilter) {
+                        case 'low':
+                            if (rend !== null && rend <= 50) filteredData.push(row);
+                            break;
+                        case 'mid':
+                            if (rend !== null && rend > 50 && rend <= 75) filteredData.push(row);
+                            break;
+                        case 'high':
+                            if (rend !== null && rend > 75) filteredData.push(row);
+                            break;
+                        case 'production':
+                            if (codigoPeca && productionCodes.has(String(codigoPeca).trim())) {
+                                filteredData.push(row);
+                            }
+                            break;
+                        case 'all':
+                        default:
+                            filteredData.push(row);
+                            break;
+                    }
+                });
+
+                countTotal.textContent = monthFilteredData.length;
+                countProduction.textContent = countP; 
+                countLow.textContent = countL;
+                countMid.textContent = countM;
+                countHigh.textContent = countH;
+
+                panels.forEach(panel => {
+                    panel.classList.toggle('panel-active', panel.dataset.filter === currentFilter);
+                });
+
+                buildTable(filteredData);
+            }
+
+            panels.forEach(panel => {
+                panel.addEventListener('click', () => {
+                    currentFilter = panel.dataset.filter;
+                    updatePanelsAndTable(); 
+                });
+            });
+
+            monthFilterSelect.addEventListener('change', () => {
+                currentMonthFilter = monthFilterSelect.value;
+                updatePanelsAndTable(); 
+            });
+
+
+            function buildTable(data) {
+                tableContainer.innerHTML = '';
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headerRow = document.createElement('tr');
+
+                headers.forEach(headerText => {
+                    if (!hiddenColumns.includes(headerText)) {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    }
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                data.forEach(rowData => {
+                    if (rowData.length === headers.length) {
+                        const tr = document.createElement('tr');
+                        
+                        const codigoPeca = rowData[codigoPecaIndex]; 
+                        if (codigoPeca && productionCodes.has(String(codigoPeca).trim())) {
+                            tr.classList.add('row-in-production');
+                        }
+                        
+                        rowData.forEach((cellData, index) => {
+                            const headerText = headers[index];
+                            if (!hiddenColumns.includes(headerText)) {
+                                const td = document.createElement('td');
+                                td.textContent = cellData;
+                                
+                                if (index === rendimentoIndex) {
+                                    td.classList.add('rendimento-cell');
+                                }
+                                
+                                if (index === codigoPecaIndex) {
+                                    td.classList.add('codigo-peca-cell');
+                                    td.addEventListener('click', () => {
+                                        openModal(rowData);
+                                    });
+                                }
+                                
+                                tr.appendChild(td);
+                            }
+                        });
+                        tbody.appendChild(tr);
+                    } else if (rowData.length > 1) {
+                        console.warn("Linha ignorada (número incorreto de colunas):", rowData);
+                    }
+                });
+
+                table.appendChild(tbody);
+
+                if (data.length > 0) {
+                    tableContainer.appendChild(table);
+                } else if (fullData.length === 0) {
+                     tableContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Nenhum dado válido encontrado no arquivo.</p>';
+                } else {
+                     tableContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Nenhum registro encontrado para este filtro.</p>';
+                }
+            }
+
+            // Mensagem inicial
+            buildTable([]);
+            tableContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Por favor, importe um arquivo .txt para começar.</p>';
+        });
+    </script>
+
+</body>
+</html>

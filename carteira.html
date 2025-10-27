@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Carteira de Pedidos - Fundição Erus</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* === PALETA ORACLE SQL DARK (ALTA VISIBILIDADE) === */
+        :root {
+            /* Tons de Cinza Escuro (Mais Pretos) */
+            --primary-bg: #101014;    /* Fundo principal (quase preto) */
+            --secondary-bg: #1c1c20;  /* Fundo secundário (painéis) */
+            --accent-bg: #2a2a30;     /* Fundo de hover, linha ímpar, barras */
+            --border-color: #4a4a50;  /* Cor da borda (mais visível) */
+            
+            /* Tons de Texto (Alta Visibilidade) */
+            --text-primary: #f0f0f0;   /* Texto principal (branco) */
+            --text-secondary: #b0b0b0; /* Texto secundário (cinza claro) */
+            --text-dark: #000000;      /* Texto escuro (para botões claros) */
+
+            /* MUDANÇA: Cores de Destaque (Amarelo Queimado) */
+            --primary-accent: #cc9900;       /* Cor de destaque principal (amarelo queimado) */
+            --primary-accent-dark: #aa8000; /* Destaque para hover (mais escuro) */
+            
+            /* Cores de Feedback (Mantidas) */
+            --success-color: #4ade80;
+            --warning-color: #facc15;
+            --danger-color: #f87171;
+            
+            /* Cores da Tabela */
+            --table-header-bg: #25252a;
+            --table-hover-bg: var(--primary-accent); /* MUDANÇA: Atualizado automaticamente */
+            --table-hover-text: var(--text-dark);
+            
+            /* Transição Padrão */
+            --transition: all 0.2s ease-in-out;
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        body { 
+            background: var(--primary-bg); 
+            color: var(--text-primary); 
+            padding: 15px;
+            line-height: 1.4;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-y: auto; 
+        }
+
+        /* === TELA DE CARREGAMENTO ATUALIZADA === */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-bg); 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-logo {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-accent); /* MUDANÇA: Destaque amarelo */
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* === CONTAINER PRINCIPAL === */
+        .container { 
+            max-width: 1500px; 
+            margin: 0 auto; 
+            background: var(--secondary-bg); 
+            border-radius: 4px; 
+            box-shadow: none; 
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header { 
+            background: var(--accent-bg); 
+            color: var(--text-primary); 
+            padding: 15px 20px; 
+            border-bottom: 2px solid var(--primary-accent); /* MUDANÇA: Destaque amarelo */
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        h1 { 
+            font-size: 18px; 
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        p.subtitle { 
+            margin-top: 4px; 
+            color: var(--text-secondary); 
+            font-size: 12px;
+            font-weight: 400;
+        }
+        
+        /* === ESTILO DE BOTÃO PADRÃO (COM ÍCONES) === */
+        button { 
+            display: inline-flex;
+            align-items: center;
+            gap: 6px; 
+            padding: 6px 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            cursor: pointer; 
+            background: var(--accent-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        button:hover { 
+            background: var(--border-color);
+            border-color: #6a6a72;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Ícones dentro dos botões */
+        button svg {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2.5;
+        }
+        
+        /* Botão Primário (Ex: Importar) */
+        button.btn-primary {
+            background-color: var(--primary-accent);
+            border-color: var(--primary-accent);
+            color: var(--text-dark); 
+            font-weight: 600;
+        }
+        button.btn-primary:hover {
+            background-color: var(--primary-accent-dark);
+            border-color: var(--primary-accent-dark);
+        }
+        
+        /* Botão de Alerta (Ex: Ocultar Modelos Ativo) */
+        /* Este continua amarelo claro (#facc15) quando ativo para diferenciar */
+        button.btn-warning.active {
+            background-color: var(--warning-color); 
+            border-color: #d9a00b;
+            color: var(--text-dark); 
+            font-weight: 600;
+        }
+        button.btn-warning.active:hover {
+            background-color: #d9a00b;
+        }
+        
+        /* Painel de totais (Cards) */
+        .totals-panel {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--primary-bg); 
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .total-card {
+            flex: 1;
+            min-width: 180px;
+            background: var(--secondary-bg); 
+            border-radius: 4px; 
+            box-shadow: none; 
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--border-color); 
+            transition: var(--transition);
+        }
+        .total-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-bg);
+        }
+        
+        .total-card .label {
+            font-size: 12px;
+            color: var(--text-secondary); 
+            font-weight: 500;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        .total-card .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary); 
+        }
+        
+        /* Card Atrasado */
+        .total-card.delayed {
+            background-color: #3f2222; 
+            border-color: var(--danger-color);
+        }
+        
+        .total-card.delayed .value {
+            color: var(--danger-color);
+        }
+        
+        /* Seção de Gráficos */
+        .charts-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: var(--primary-bg); 
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .chart-container {
+            flex: 1;
+            min-width: 320px;
+            background: var(--secondary-bg); 
+            border-radius: 4px; 
+            box-shadow: none; 
+            padding: 20px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary); 
+            font-size: 14px;
+        }
+        
+        .chart-canvas-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Painel de Controles */
+        .controls { 
+            padding: 10px 15px; 
+            display: flex; 
+            gap: 12px; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: var(--accent-bg); 
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        
+        .left-controls { 
+            display: flex; 
+            gap: 6px; 
+            align-items: center; 
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary); 
+        }
+
+        /* Inputs (Texto, Data, etc.) */
+        input[type="text"], input[type="file"], input[type="date"] { 
+            padding: 6px 8px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            font-size: 12px;
+            background: var(--primary-bg); 
+            color: var(--text-primary); 
+            font-family: 'Inter', sans-serif;
+            max-width: 120px;
+            min-width: 100px; 
+            transition: var(--transition);
+        }
+        input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            /* MUDANÇA: Sombra do foco amarelo (rgb(204, 153, 0)) */
+            box-shadow: 0 0 0 2px rgba(204, 153, 0, 0.3);
+        }
+
+        /* Input de filtro na tabela */
+        thead tr.filter-row input { 
+            width: 100%; 
+            padding: 6px 8px; 
+            box-sizing: border-box; 
+            border-radius: 0; 
+            border: none; 
+            border-bottom: 1px solid var(--border-color); 
+            background: var(--accent-bg); 
+            color: var(--text-primary); 
+            font-size: 11px;
+            margin: 0;
+            display: block;
+            transition: var(--transition);
+        }
+        thead tr.filter-row input:focus {
+            background: var(--secondary-bg);
+            border-bottom-color: var(--primary-accent); /* MUDANÇA: Foco amarelo */
+        }
+
+        
+        /* Tabela */
+        .table-container { 
+            overflow: auto; 
+            flex: 1;
+            min-height: 300px; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 100px;
+            font-size: 12px;
+            table-layout: fixed; 
+        }
+        
+        th, td { 
+            padding: 8px 10px; 
+            border-bottom: 1px solid var(--border-color); 
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-primary); 
+        }
+        
+        td, th {
+            border-right: 1px solid var(--border-color); 
+        }
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+        
+        /* LARGURAS FIXAS DAS COLUNAS (Mantidas) */
+        th:nth-child(1), td:nth-child(1) { width: 70px; }  /* PEDIDO */
+        th:nth-child(2), td:nth-child(2) { width: 100px; } /* ENTREGA */
+        th:nth-child(3), td:nth-child(3) { width: 180px; } /* RAZÃO SOCIAL */
+        th:nth-child(4), td:nth-child(4) { width: 90px; }  /* CÓDIGO */
+        th:nth-child(5), td:nth-child(5) { width: 210px; } /* NOME PRODUTO */
+        th:nth-child(6), td:nth-child(6) { width: 130px; } /* MATERIAL */
+        th:nth-child(7), td:nth-child(7) { width: 70px; }  /* SALDO */
+        th:nth-child(8), td:nth-child(8) { width: 70px; }  /* PESO (UN) */
+        th:nth-child(9), td:nth-child(9) { width: 70px; } /* TOTAL */
+        
+        /* Cabeçalho da Tabela */
+        thead tr.header-row th { 
+            background: var(--table-header-bg); 
+            color: #ffffff; 
+            position: sticky; 
+            top: 0; 
+            z-index: 20; 
+            font-weight: 600;
+            font-size: 11px; 
+            padding: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border-top: 1px solid var(--border-color);
+            text-transform: uppercase; 
+        }
+        
+        /* Linha de Filtro da Tabela */
+        thead tr.filter-row th { 
+            background: var(--accent-bg); 
+            padding: 0; 
+            position: sticky;
+            top: 37px; 
+            z-index: 15;
+        }
+
+        /* Linhas da Tabela */
+        tr:nth-child(even) td { 
+            background: var(--secondary-bg); 
+        }
+        
+        tr:nth-child(odd) td {
+            background: #222226; 
+        }
+        
+        tr:hover td { 
+            background: var(--table-hover-bg); /* MUDANÇA: Amarelo de destaque */
+            color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+        
+        /* Rodapé */
+        .footer { 
+            padding: 10px 15px; 
+            background: var(--accent-bg); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 8px; 
+            flex-wrap: wrap;
+            border-top: 2px solid var(--primary-accent); /* MUDANÇA: Destaque amarelo */
+            color: var(--text-primary); 
+            flex-shrink: 0;
+        }
+        
+        .status { 
+            font-size: 12px; 
+            color: var(--text-secondary); 
+            font-weight: 500;
+        }
+        
+        .panel-totals { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .panel-card { 
+            background: var(--secondary-bg); 
+            border: 1px solid var(--border-color); 
+            padding: 6px 10px; 
+            border-radius: 4px; 
+            min-width: 140px; 
+            text-align: center;
+            box-shadow: none; 
+            color: var(--text-secondary); 
+        }
+        
+        .panel-card .label { 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .panel-card .value { 
+            font-size: 14px; 
+            font-weight: 700; 
+            margin-top: 4px;
+            color: var(--text-primary); 
+        }
+
+        /* Botões de Navegação Flutuantes */
+        .nav-buttons {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .nav-button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--primary-accent); /* MUDANÇA: Amarelo */
+            color: var(--text-dark); 
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .nav-button:hover {
+            background-color: var(--primary-accent-dark); /* MUDANÇA: Amarelo escuro */
+            transform: translateY(-3px);
+        }
+        
+        .nav-button.hidden {
+            display: none;
+        }
+
+        /* Media Queries (Ajustadas para nova fonte e layout) */
+        @media (max-width: 900px) {
+            body { padding: 10px; font-size: 13px; }
+            .container { border-radius: 4px; }
+            header { flex-direction: column; gap: 10px; }
+            .totals-panel { padding: 10px; flex-direction: column; }
+            .total-card { min-width: 100%; }
+            .charts-section { padding: 10px; flex-direction: column; }
+            .chart-container { min-width: 100%; }
+            .controls { padding: 8px 10px; }
+            thead tr.filter-row th { top: 39px; }
+            .footer { padding: 8px 10px; }
+            .panel-card { min-width: 120px; padding: 5px 8px; }
+            .panel-card .value { font-size: 13px; }
+            .nav-buttons { right: 15px; bottom: 15px; }
+            .nav-button { width: 45px; height: 45px; font-size: 18px; }
+            .filter-group { flex-direction: column; align-items: flex-start; gap: 2px;}
+            .filter-group input { width: 100%; }
+            .footer { flex-direction: column; align-items: flex-start; }
+            .panel-totals { width: 100%; justify-content: space-between; margin: 5px 0; }
+            .panel-card { flex-grow: 1; min-width: 100px; }
+
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            .charts-section { padding: 8px; }
+            .chart-container { height: 300px; }
+            thead tr.filter-row th { top: 54px; }
+            .left-controls, .controls { gap: 4px; }
+            button { padding: 5px 8px; font-size: 11px; }
+            input[type="text"] { max-width: 120px; }
+            .panel-totals { gap: 5px; }
+            .panel-card { min-width: 100px; padding: 4px 6px; }
+            .panel-card .label { font-size: 10px; }
+            .panel-card .value { font-size: 12px; }
+            .nav-buttons { right: 10px; bottom: 10px; }
+            .nav-button { width: 40px; height: 40px; font-size: 16px; }
+            .filter-group { flex-direction: column; align-items: flex-start; gap: 2px;}
+            .filter-group input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-logo">FUNDIÇÃO ERUS</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando carteira de pedidos...</div>
+    </div>
+
+    <div class="container" style="display: none;">
+        <header>
+            <div class="header-content">
+                <h1>CARTEIRA DE PEDIDOS - FUNDIÇÃO ERUS</h1>
+                <p class="subtitle">Controle de pedidos, importação de Excel e visualização de dados.</p>
+            </div>
+            <button class="header-button" onclick="redirectToLink()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Voltar
+            </button>
+        </header>
+
+        <div class="totals-panel">
+            <div class="total-card">
+                <div class="label">Total de Pedidos</div>
+                <div id="totalOrdersCard" class="value">0</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Quantidade Total</div>
+                <div id="totalQuantityCard" class="value">0</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Peso Total (kg)</div>
+                <div id="totalWeightCard" class="value">0.00</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Peso Médio (kg)</div>
+                <div id="avgWeightCard" class="value">0.00</div>
+            </div>
+            <div class="total-card delayed">
+                <div class="label">Peso Atrasado (kg)</div>
+                <div id="delayedWeightCard" class="value">0.00</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">PESO TOTAL POR MÊS (kg)</div>
+                <div class="chart-canvas-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">PARETO - PESO POR CLIENTE</div>
+                <div class="chart-canvas-container">
+                    <canvas id="paretoChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls" id="controlsPanel">
+            <div class="left-controls">
+                <label for="excelFile" style="display:inline-block;">
+                    <input type="file" id="excelFile" accept=".xlsx" style="display:none" onchange="importExcel(event)">
+                    <button class="btn-primary" title="Importar Excel" onclick="document.getElementById('excelFile').click()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        Importar
+                    </button>
+                </label>
+                
+                <div class="filter-group">
+                    <label for="dateFrom">De:</label>
+                    <input type="date" id="dateFrom" onchange="applyColumnFilters()">
+                </div>
+                <div class="filter-group">
+                    <label for="dateTo">Até:</label>
+                    <input type="date" id="dateTo" onchange="applyColumnFilters()">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button id="toggleModelosBtn" class="btn-warning" title="Alternar visibilidade dos pedidos de modelagem" onclick="toggleModelosFilter()">
+                    <svg id="icon-eye-slash" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display: none;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                    <svg id="icon-eye" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span id="toggleModelosText">Ocultar Modelos</span>
+                </button>
+                
+                <button class="btn-link" id="exportBtn" onclick="exportToExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Extrair Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="ordersTable" role="table" aria-label="Tabela de pedidos">
+                <thead>
+                    <tr class="header-row">
+                        <th>PEDIDO</th>
+                        <th>ENTREGA</th>
+                        <th>RAZÃO SOCIAL</th>
+                        <th>CÓDIGO</th>
+                        <th>NOME PRODUTO</th>
+                        <th>MATERIAL</th>
+                        <th>SALDO</th>
+                        <th>PESO (UN)</th>
+                        <th>TOTAL</th>
+                    </tr>
+                    <tr class="filter-row">
+                        <th><input data-col="0" placeholder="Filtrar..."/></th>
+                        <th><input data-col="1" placeholder="Filtrar..."/></th>
+                        <th><input data-col="2" placeholder="Filtrar..."/></th>
+                        <th><input data-col="3" placeholder="Filtrar..."/></th>
+                        <th><input data-col="4" placeholder="Filtrar..."/></th>
+                        <th><input data-col="5" placeholder="Filtrar..."/></th>
+                        <th><input data-col="6" placeholder="Filtrar..."/></th>
+                        <th><input data-col="7" placeholder="Filtrar..."/></th>
+                        <th><input data-col="8" placeholder="Filtrar..."/></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <div class="status">Total de pedidos: <strong id="totalOrders">0</strong></div>
+            <div class="panel-totals">
+                <div class="panel-card">
+                    <div class="label">Qtd. Total</div>
+                    <div id="totalQuantity" class="value">0</div>
+                </div>
+                <div class="panel-card">
+                    <div class="label">Peso Total (kg)</div>
+                    <div id="totalWeight" class="value">0.00</div>
+                </div>
+                <div class="panel-card">
+                    <div class="label">Peso Médio (kg)</div>
+                    <div id="avgWeight" class="value">0.00</div>
+                </div>
+                <div class="panel-card" style="background-color: rgba(248, 113, 113, 0.1); border: 1px solid var(--danger-color);">
+                    <div class="label">Peso Atrasado (kg)</div>
+                    <div id="delayedWeight" class="value">0.00</div>
+                </div>
+            </div>
+            <div>
+                <button onclick="exportToExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button id="goToControlsBtn" class="nav-button hidden" title="Ir para controles">↓</button>
+        <button id="backToTopBtn" class="nav-button hidden" title="Voltar ao topo">↑</button>
+    </div>
+
+    <script>
+        // === REMOVIDO: Chart.register(ChartDataLabels); ===
+
+        // === CONFIGURAÇÕES DE COLUNAS ===
+        const COL_PEDIDO = 0;
+        const COL_ENTREGA = 1;
+        const COL_RAZAO_SOCIAL = 2;
+        const COL_CODIGO = 3; 
+        const COL_NOME_PRODUTO = 4;
+        const COL_MATERIAL = 5;
+        const COL_QUANT = 6;
+        const COL_PESO_UN = 7;
+        const COL_PESO_TOTAL = 8;
+        
+        let isModelosHidden = false; 
+        
+        let monthlyChart = null;
+        let paretoChart = null;
+        
+        // Obter cores do CSS para os gráficos
+        // Elas serão atualizadas automaticamente pois buscam das variáveis de CSS
+        const chartTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+        const chartGridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() + '33'; // Adiciona opacidade
+        const chartAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim();
+        const chartDangerColor = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
+
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loading-screen');
+            const mainContent = document.querySelector('.container');
+            
+            loadingScreen.style.opacity = '0';
+            
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'flex';
+            }, 500);
+        }
+
+        function formatNumber(value){
+            if (value === null || value === undefined || isNaN(value)) return '0,00';
+            return Number(value).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        function parseNumberSafe(text){
+            if (text === null || text === undefined) return 0;
+            let s = String(text).trim();
+            if (s === '') return 0;
+            s = s.replace(/\s+/g, '');
+            const hasDot = s.indexOf('.') > -1;
+            const hasComma = s.indexOf(',') > -1;
+
+            if (hasDot && hasComma) {
+                s = s.replace(/\./g, '').replace(/,/g, '.');
+            } else if (!hasDot && hasComma) {
+                s = s.replace(/,/g, '.');
+            }
+            s = s.replace(/[^0-9.\-]/g, '');
+            const num = parseFloat(s);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function parseDate(dateString) {
+            if (!dateString) return new Date(0);
+            
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const parts = dateString.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+            
+            const formats = [
+                /(\d{2})\/(\d{2})\/(\d{4})/,
+                /(\d{2})-(\d{2})-(\d{4})/,
+                /(\d{4})-(\d{2})-(\d{2})/,
+                /(\d{4})\/(\d{2})\/(\d{2})/
+            ];
+            
+            let day, month, year;
+            
+            for (const format of formats) {
+                const match = dateString.match(format);
+                if (match) {
+                    if (format === formats[0] || format === formats[1]) {
+                        day = parseInt(match[1], 10);
+                        month = parseInt(match[2], 10) - 1;
+                        year = parseInt(match[3], 10);
+                    } else {
+                        year = parseInt(match[1], 10);
+                        month = parseInt(match[2], 10) - 1;
+                        day = parseInt(match[3], 10);
+                    }
+                    
+                    if (year > 0 && month >= 0 && month <= 11 && day > 0 && day <= 31) {
+                        return new Date(year, month, day);
+                    }
+                }
+            }
+            
+            return new Date(0);
+        }
+
+        function getFirstName(razaoSocial) {
+            if (!razaoSocial) return '';
+            
+            razaoSocial = razaoSocial.trim();
+            const suffixes = ['LTDA', 'EIRELI', 'ME', 'S/A', 'SA', 'COMERCIO', 'COMÉRCIO', 'INDUSTRIA', 'INDÚSTRIA'];
+            
+            for (const suffix of suffixes) {
+                const regex = new RegExp('\\s*' + suffix + '\\s*$', 'i');
+                razaoSocial = razaoSocial.replace(regex, '');
+            }
+            
+            const firstSpace = razaoSocial.indexOf(' ');
+            if (firstSpace > 0) {
+                return razaoSocial.substring(0, firstSpace);
+            }
+            
+            return razaoSocial;
+        }
+
+        function calculateDelayedWeight() {
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            let delayedWeight = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            rows.forEach(tr => {
+                if (tr.style.display === 'none') return;
+
+                const cells = tr.querySelectorAll('td');
+                const dateText = cells[COL_ENTREGA].textContent;
+                const weightText = cells[COL_PESO_TOTAL].textContent;
+                
+                if (dateText && weightText) {
+                    const deliveryDate = parseDate(dateText);
+                    const weight = parseNumberSafe(weightText);
+                    
+                    if (deliveryDate < today && deliveryDate.getTime() !== 0) {
+                        delayedWeight += weight;
+                    }
+                }
+            });
+            
+            return delayedWeight;
+        }
+
+        function sortByDate() {
+            const tbody = document.querySelector('#ordersTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort((a, b) => {
+                const dateA = parseDate(a.cells[COL_ENTREGA].textContent);
+                const dateB = parseDate(b.cells[COL_ENTREGA].textContent);
+                return dateA - dateB;
+            });
+            
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+            
+            rows.forEach(row => tbody.appendChild(row));
+            
+            applyColumnFilters();
+        }
+
+        function updateCharts() {
+            updateMonthlyChart();
+            updateParetoChart();
+        }
+
+        function updateMonthlyChart() {
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            const monthlyData = {};
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            for (let i = 0; i < 12; i++) {
+                monthlyData[i] = 0;
+            }
+            
+            rows.forEach(tr => {
+                if (tr.style.display === 'none') return;
+
+                const cells = tr.querySelectorAll('td');
+                const dateText = cells[COL_ENTREGA].textContent;
+                const weightText = cells[COL_PESO_TOTAL].textContent;
+                
+                if (dateText && weightText) {
+                    const date = parseDate(dateText);
+                    const weight = parseNumberSafe(weightText);
+                    if (date.getFullYear() > 2000) {
+                        const month = date.getMonth();
+                        monthlyData[month] += weight;
+                    }
+                }
+            });
+            
+            const labels = monthNames;
+            const data = Object.values(monthlyData);
+            
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+            
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Peso Total (kg)', 
+                        data: data,
+                        backgroundColor: chartAccentColor + 'B3', // 70% opacity
+                        borderColor: chartAccentColor,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Peso (kg)', color: chartTextColor }, 
+                            ticks: { color: chartTextColor }, 
+                            grid: { color: chartGridColor } 
+                        },
+                        x: { 
+                            title: { display: false }, 
+                            ticks: { color: chartTextColor }, 
+                            grid: { color: chartGridColor } 
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `Peso: ${formatNumber(context.raw)} kg`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateParetoChart() {
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            const clientData = {};
+            const fullNames = {};
+            
+            rows.forEach(tr => {
+                if (tr.style.display === 'none') return;
+                
+                const cells = tr.querySelectorAll('td');
+                const razaoSocial = cells[COL_RAZAO_SOCIAL].textContent.trim();
+                const weightText = cells[COL_PESO_TOTAL].textContent;
+                
+                if (razaoSocial && weightText) {
+                    const weight = parseNumberSafe(weightText);
+                    const firstName = getFirstName(razaoSocial);
+                    
+                    if (!clientData[firstName]) {
+                        clientData[firstName] = 0;
+                        fullNames[firstName] = razaoSocial;
+                    }
+                    clientData[firstName] += weight;
+                }
+            });
+            
+            const clientArray = Object.entries(clientData)
+                .map(([client, weight]) => ({ client, weight, fullName: fullNames[client] }))
+                .sort((a, b) => b.weight - a.weight);
+            
+            const topClients = clientArray.slice(0, 10);
+            const totalWeight = clientArray.reduce((sum, item) => sum + item.weight, 0);
+            
+            let cumulativePercentage = 0;
+            const paretoData = topClients.map(item => {
+                const percentage = (item.weight / totalWeight) * 100;
+                cumulativePercentage += percentage;
+                return {
+                    client: item.client,
+                    fullName: item.fullName,
+                    weight: item.weight,
+                    cumulativePercentage: cumulativePercentage
+                };
+            });
+            
+            const labels = paretoData.map(item => item.client);
+            const weightData = paretoData.map(item => item.weight);
+            const cumulativeData = paretoData.map(item => item.cumulativePercentage);
+            
+            if (paretoChart) {
+                paretoChart.destroy();
+            }
+            
+            const ctx = document.getElementById('paretoChart').getContext('2d');
+            paretoChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { 
+                            label: 'Peso (kg)', 
+                            data: weightData, 
+                            backgroundColor: chartAccentColor + 'B3', 
+                            yAxisID: 'y',
+                            borderRadius: 4
+                        },
+                        { 
+                            label: 'Percentual Acumulado', 
+                            data: cumulativeData, 
+                            type: 'line', 
+                            fill: false, 
+                            borderColor: chartDangerColor, 
+                            borderWidth: 2, 
+                            pointRadius: 4, 
+                            pointBackgroundColor: chartDangerColor,
+                            yAxisID: 'y1' 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            type: 'linear', 
+                            display: true, 
+                            position: 'left', 
+                            title: { display: true, text: 'Peso (kg)', color: chartTextColor }, 
+                            beginAtZero: true,
+                            ticks: { color: chartTextColor },
+                            grid: { color: chartGridColor }
+                        },
+                        y1: { 
+                            type: 'linear', 
+                            display: true, 
+                            position: 'right', 
+                            title: { display: true, text: 'Acumulado (%)', color: chartTextColor }, 
+                            min: 0, 
+                            max: 100, 
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: chartTextColor } 
+                        },
+                        x: { 
+                            ticks: { maxRotation: 45, minRotation: 45, color: chartTextColor }, 
+                            grid: { color: chartGridColor } 
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: chartTextColor
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: context => paretoData[context[0].dataIndex].fullName,
+                                label: context => {
+                                    const label = context.dataset.label || '';
+                                    return label.includes('Peso') ? `Peso: ${formatNumber(context.raw)} kg` : `Acumulado: ${formatNumber(context.raw)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateOrderCount(){
+            const count = Array.from(document.querySelectorAll('#ordersTable tbody tr')).filter(tr => tr.style.display !== 'none').length;
+            document.getElementById('totalOrders').textContent = count;
+            document.getElementById('totalOrdersCard').textContent = count;
+            
+            updateTotals();
+        }
+
+        function updateTotals(){
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            let totalQty = 0;
+            let totalWeight = 0;
+
+            rows.forEach(tr=>{
+                if (tr.style.display === 'none') return;
+                
+                const cells = tr.querySelectorAll('td');
+                const qText = (cells[COL_QUANT] && cells[COL_QUANT].textContent) ? cells[COL_QUANT].textContent : '';
+                const wtText = (cells[COL_PESO_TOTAL] && cells[COL_PESO_TOTAL].textContent) ? cells[COL_PESO_TOTAL].textContent : '';
+                const wUnitText = (cells[COL_PESO_UN] && cells[COL_PESO_UN].textContent) ? cells[COL_PESO_UN].textContent : '';
+                const qty = parseNumberSafe(qText);
+                let weight = parseNumberSafe(wtText);
+
+                if ((wtText === null || String(wtText).trim() === '') && qty > 0) {
+                    const pesoUn = parseNumberSafe(wUnitText);
+                    weight = qty * (isNaN(pesoUn) ? 0 : pesoUn);
+                    if (cells[COL_PESO_TOTAL]) {
+                        cells[COL_PESO_TOTAL].textContent = formatNumber(weight);
+                    }
+                }
+
+                totalQty += (isNaN(qty) ? 0 : qty);
+                totalWeight += (isNaN(weight) ? 0 : weight);
+            });
+
+            const formattedTotalQty = Number(totalQty).toLocaleString('pt-BR');
+            const formattedTotalWeight = formatNumber(totalWeight);
+            const avg = (totalQty === 0) ? 0 : (totalWeight / totalQty);
+            const formattedAvg = formatNumber(avg);
+            const delayedWeight = calculateDelayedWeight(); 
+            const formattedDelayedWeight = formatNumber(delayedWeight);
+
+            // Atualiza o rodapé
+            document.getElementById('totalQuantity').textContent = formattedTotalQty;
+            document.getElementById('totalWeight').textContent = formattedTotalWeight;
+            document.getElementById('avgWeight').textContent = formattedAvg;
+            document.getElementById('delayedWeight').textContent = formattedDelayedWeight;
+            
+            // Atualiza os cards do topo
+            document.getElementById('totalQuantityCard').textContent = formattedTotalQty;
+            document.getElementById('totalWeightCard').textContent = formattedTotalWeight;
+            document.getElementById('avgWeightCard').textContent = formattedAvg;
+            document.getElementById('delayedWeightCard').textContent = formattedDelayedWeight;
+            
+            updateCharts();
+        }
+
+        document.querySelectorAll('thead .filter-row input').forEach(inp=>{
+            inp.addEventListener('input', applyColumnFilters);
+        });
+
+        function toggleModelosFilter() {
+            isModelosHidden = !isModelosHidden;
+            const btn = document.getElementById('toggleModelosBtn');
+            const btnText = document.getElementById('toggleModelosText');
+            const iconEye = document.getElementById('icon-eye');
+            const iconEyeSlash = document.getElementById('icon-eye-slash');
+
+            if (isModelosHidden) {
+                btn.classList.add('active');
+                btnText.textContent = 'Mostrar Modelos'; 
+                iconEye.style.display = 'none';
+                iconEyeSlash.style.display = 'inline-block';
+            } else {
+                btn.classList.remove('active');
+                btnText.textContent = 'Ocultar Modelos'; 
+                iconEye.style.display = 'inline-block';
+                iconEyeSlash.style.display = 'none';
+            }
+            applyColumnFilters();
+        }
+
+        function applyColumnFilters(){
+            const inputs = document.querySelectorAll('thead .filter-row input');
+            const filters = Array.from(inputs).map(i => i.value.trim().toUpperCase());
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            
+            const dateFromStr = document.getElementById('dateFrom').value;
+            const dateToStr = document.getElementById('dateTo').value;
+            
+            const dateFrom = dateFromStr ? parseDate(dateFromStr) : new Date(0);
+            const dateTo = dateToStr ? parseDate(dateToStr) : new Date(8640000000000000); 
+
+            if (dateToStr) {
+                const parts = dateToStr.split('-');
+                dateTo.setFullYear(parts[0], parts[1] - 1, parseInt(parts[2]) + 1); 
+            }
+            
+            rows.forEach(row=>{
+                const cells = row.getElementsByTagName('td');
+                let visible = true;
+                
+                // 1. FILTRO DE TEXTO NAS COLUNAS
+                for (let i = 0; i < filters.length; i++){
+                    if (!filters[i]) continue;
+                    const cellText = (cells[i] && cells[i].textContent) ? cells[i].textContent.toUpperCase() : '';
+                    if (cellText.indexOf(filters[i]) === -1){
+                        visible = false;
+                        break;
+                    }
+                }
+                
+                // 2. FILTRO 'OCULTAR MODELOS'
+                if (visible && isModelosHidden) {
+                    const nomeProduto = (cells[COL_NOME_PRODUTO] && cells[COL_NOME_PRODUTO].textContent) ? cells[COL_NOME_PRODUTO].textContent.toUpperCase().trim() : '';
+                    if (nomeProduto.startsWith("MODELO")) {
+                        visible = false;
+                    }
+                }
+
+                // 3. FILTRO POR PERÍODO DE ENTREGA
+                if (visible && (dateFromStr || dateToStr)) {
+                    const dateText = cells[COL_ENTREGA].textContent;
+                    const deliveryDate = parseDate(dateText);
+
+                    if (deliveryDate.getTime() !== 0) {
+                        if (deliveryDate < dateFrom || deliveryDate >= dateTo) {
+                            visible = false;
+                        }
+                    }
+                }
+
+                row.style.display = visible ? '' : 'none';
+            });
+            
+            updateOrderCount();
+        }
+
+        async function saveToServer() {
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            const data = Array.from(rows).map(row => ({
+                pedido: row.cells[0].textContent,
+                entrega: row.cells[1].textContent,
+                razao_social: row.cells[2].textContent,
+                codigo: row.cells[3].textContent,
+                nome_produto: row.cells[4].textContent,
+                material: row.cells[5].textContent,
+                saldo: parseNumberSafe(row.cells[6].textContent),
+                peso_un: parseNumberSafe(row.cells[7].textContent),
+                peso_total: parseNumberSafe(row.cells[8].textContent)
+            }));
+            
+            try {
+                const response = await fetch('/api/save-carteira', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    console.error('Erro ao salvar no servidor. Status:', response.status);
+                } else {
+                    console.log('Dados salvos no servidor com sucesso.');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao salvar:', error);
+            }
+        }
+
+        async function loadDataFromServer() {
+            try {
+                const response = await fetch('/api/carteira');
+                if (!response.ok) throw new Error('Erro ao buscar dados.');
+                const data = await response.json();
+                
+                const tbody = document.querySelector('#ordersTable tbody');
+                tbody.innerHTML = '';
+                
+                data.forEach(rowData => {
+                    const tr = document.createElement('tr');
+                    const values = [
+                        rowData.pedido, rowData.entrega, rowData.razao_social,
+                        rowData.codigo, rowData.nome_produto, rowData.material,
+                        String(rowData.saldo), String(rowData.peso_un), String(rowData.peso_total)
+                    ];
+                    values.forEach(cellData => {
+                        const td = document.createElement('td');
+                        td.className = 'editable';
+                        td.contentEditable = false; 
+                        td.textContent = cellData;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                
+                sortByDate(); 
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Não foi possível conectar ao servidor para carregar a carteira.');
+            }
+        }
+        
+        function redirectToLink() {
+            window.location.href = 'processos.html';
+        }
+        
+        // ===================================================
+        // FUNÇÃO DE EXPORTAÇÃO PARA EXCEL (COM ESTILOS)
+        // ===================================================
+        function exportToExcel(){
+            const headerRow = document.querySelector('#ordersTable thead .header-row');
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+
+            if (visibleRows.length === 0) {
+                alert('A tabela está vazia ou todos os itens estão filtrados/ocultos. Nada para exportar.');
+                return;
+            }
+
+            const data = [];
+            
+            const headers = Array.from(headerRow.querySelectorAll('th')).map(th => th.textContent.trim());
+            data.push(headers);
+
+            visibleRows.forEach(row => {
+                const rowData = Array.from(row.querySelectorAll('td')).map((td, index) => {
+                    let cellText = td.textContent.trim();
+                    
+                    if (index === COL_QUANT || index === COL_PESO_UN || index === COL_PESO_TOTAL) {
+                        return parseNumberSafe(cellText); 
+                    }
+                    
+                    return cellText;
+                });
+                data.push(rowData);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Estilo do cabeçalho (Cinza claro)
+            const headerStyle = {
+                font: { bold: true, color: { rgb: "000000" } }, 
+                fill: { fgColor: { rgb: "E0E0E0" } } 
+            };
+            const numberFormat = "#,##0.00"; 
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            
+            // Aplica estilo ao cabeçalho
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (!ws[cellAddress]) ws[cellAddress] = { t: 's', v: headers[C] };
+                ws[cellAddress].s = headerStyle;
+            }
+
+            // Aplica formatação de número às colunas corretas
+            [COL_QUANT, COL_PESO_UN, COL_PESO_TOTAL].forEach(colIndex => {
+                const colLetter = XLSX.utils.encode_col(colIndex);
+                
+                for (let R = 1; R <= range.e.r; R++) { 
+                    const cellAddress = colLetter + (R + 1); 
+                    const cell = ws[cellAddress];
+                    
+                    if (cell && cell.t === 'n') { 
+                        cell.z = numberFormat;
+                    }
+                }
+            });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Carteira de Pedidos");
+            const fileName = `Carteira_Pedidos_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function getCurrentOrderData() {
+            const orderData = new Map();
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            rows.forEach(row => {
+                const orderId = row.cells[COL_PEDIDO].textContent.trim();
+                const productCode = row.cells[COL_CODIGO].textContent.trim();
+                const compositeKey = `${orderId}-${productCode}`;
+
+                if (orderId && productCode) {
+                    const data = {
+                        id: orderId,
+                        productCode: productCode,
+                        description: row.cells[COL_NOME_PRODUTO].textContent.trim(),
+                        quantity: row.cells[COL_QUANT].textContent.trim(),
+                        peso_un: row.cells[COL_PESO_UN].textContent.trim(),
+                        material: row.cells[COL_MATERIAL].textContent.trim(),
+                        weight: row.cells[COL_PESO_TOTAL].textContent.trim()
+                    };
+                    orderData.set(compositeKey, data);
+                }
+            });
+            return orderData;
+        }
+
+        function importExcel(event){
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const beforeOrderData = getCurrentOrderData(); 
+
+            const reader = new FileReader();
+            reader.onload = function(e){
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const excelRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                const tbody = document.querySelector('#ordersTable tbody');
+                tbody.innerHTML = '';
+
+                let start = 0;
+                if (excelRows.length > 0){
+                    const firstRow = excelRows[0].map(c => String(c || '').toUpperCase());
+                    if (firstRow.some(h => /PEDIDO|ENTREGA|RAZÃO|RAZAO|PESO|QUANT|QUANTIDADE/i.test(h))) start = 1;
+                }
+
+                const afterOrderData = new Map();
+                
+                for (let r = start; r < excelRows.length; r++){
+                    const row = excelRows[r];
+                    if (!row || row.length === 0) continue; 
+
+                    const tr = document.createElement('tr');
+                    
+                    const orderId = (row && row[COL_PEDIDO] !== undefined && row[COL_PEDIDO] !== null) ? String(row[COL_PEDIDO]).trim() : '';
+                    const productCode = (row && row[COL_CODIGO] !== undefined && row[COL_CODIGO] !== null) ? String(row[COL_CODIGO]).trim() : '';
+                    const compositeKey = `${orderId}-${productCode}`;
+
+                    if (orderId && productCode) {
+                        const orderDetails = {
+                            id: orderId,
+                            productCode: productCode,
+                            description: (row[COL_NOME_PRODUTO] || '').toString().trim(),
+                            quantity: (row[COL_QUANT] || '0').toString().trim(),
+                            peso_un: (row[COL_PESO_UN] || '0').toString().trim(),
+                            material: (row[COL_MATERIAL] || '').toString().trim(),
+                            weight: (row[COL_PESO_TOTAL] || '0').toString().trim()
+                        };
+                        afterOrderData.set(compositeKey, orderDetails);
+                    }
+                    
+                    for (let c = 0; c < 9; c++){
+                        const td = document.createElement('td');
+                        td.className = 'editable';
+                        td.contentEditable = false; 
+                        
+                        let cellValue = (row && row[c] !== undefined && row[c] !== null) ? row[c] : '';
+                        
+                        if (c === COL_ENTREGA && typeof cellValue === 'number' && cellValue > 1) {
+                            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                            const date = new Date(excelEpoch.getTime() + cellValue * 24 * 60 * 60 * 1000);
+                            const day = String(date.getUTCDate()).padStart(2, '0');
+                            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                            const year = date.getUTCFullYear();
+                            td.textContent = `${day}/${month}/${year}`;
+                        } else {
+                            td.textContent = String(cellValue);
+                        }
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+                
+                const addedChanges = [];
+                const removedChanges = [];
+                let totalAddedWeight = 0;
+                let totalRemovedWeight = 0;
+
+                afterOrderData.forEach((newItem, compositeKey) => {
+                    const oldItem = beforeOrderData.get(compositeKey);
+                    if (!oldItem) { 
+                        const addedWeight = parseNumberSafe(newItem.weight);
+                        addedChanges.push({ id: newItem.id, productCode: newItem.productCode });
+                        totalAddedWeight += addedWeight;
+                    } 
+                });
+
+                beforeOrderData.forEach((oldItem, compositeKey) => {
+                    if (!afterOrderData.has(compositeKey)) { 
+                        const removedWeight = parseNumberSafe(oldItem.weight);
+                        removedChanges.push({ id: oldItem.id, productCode: oldItem.productCode });
+                        totalRemovedWeight += removedWeight;
+                    }
+                });
+
+                console.log(`Importação concluída. Pedidos adicionados: ${addedChanges.length}, Pedidos removidos: ${removedChanges.length}`);
+                
+                sortByDate(); 
+                saveToServer(); 
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // === Funções de Navegação (Scroll) ===
+        function scrollToControls() {
+            document.getElementById('controlsPanel').scrollIntoView({ behavior: 'smooth' });
+        }
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function checkScrollPosition() {
+            const goToControlsBtn = document.getElementById('goToControlsBtn');
+            const backToTopBtn = document.getElementById('backToTopBtn');
+            const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+            
+            if (scrollPosition < 100) {
+                goToControlsBtn.classList.remove('hidden');
+                backToTopBtn.classList.add('hidden');
+            } else {
+                goToControlsBtn.classList.add('hidden');
+                backToTopBtn.classList.remove('hidden');
+            }
+        }
+
+        // === Event Listeners Iniciais ===
+        document.addEventListener('DOMContentLoaded', async function(){
+            document.querySelectorAll('thead .filter-row input').forEach(input => {
+                input.addEventListener('input', applyColumnFilters);
+            });
+            
+            document.getElementById('goToControlsBtn').addEventListener('click', scrollToControls);
+            document.getElementById('backToTopBtn').addEventListener('click', scrollToTop);
+            window.addEventListener('scroll', checkScrollPosition);
+            checkScrollPosition();
+            
+            const toggleBtn = document.getElementById('toggleModelosBtn');
+            isModelosHidden = false; 
+            document.getElementById('toggleModelosText').textContent = 'Ocultar Modelos';
+            document.getElementById('icon-eye').style.display = 'inline-block';
+            document.getElementById('icon-eye-slash').style.display = 'none';
+
+            try {
+                await loadDataFromServer();
+            } catch (error) {
+                console.error("Falha final ao carregar dados do servidor:", error);
+                alert("Não foi possível carregar os dados da carteira. Verifique se o servidor está no ar e tente recarregar a página.");
+            } finally {
+                hideLoadingScreen();
+            }
+        });
+    </script>
+</body>
+</html>

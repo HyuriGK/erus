@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Desenvolvimento de Modelos - Fundição Erus | PRO</title>
+    
+    <style>
+        /* 1. PALETA DE CORES DARK MODE E TIPOGRAFIA */
+        :root {
+            --primary-color: #00bcd4;
+            --secondary-color: #90a4ae;
+            --success-color: #4caf50;
+            --warning-color: #ffb300;
+            --danger-color: #e53935;
+            --info-color: #03a9f4;
+            --preparacao-color: #ba68c8; /* Roxo para Preparação */
+            --background-dark: #212529;
+            --card-bg: #2c313a;
+            --text-light: #eceff1;
+            --border-color-dark: #455a64;
+            --shadow-vibrant: 0 8px 15px rgba(0, 0, 0, 0.4);
+            --font-family-sans: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            font-family: var(--font-family-sans);
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--background-dark);
+            color: var(--text-light); 
+            line-height: 1.6;
+            overflow-y: auto; 
+            text-transform: uppercase; 
+        }
+
+        body.modal-open {
+            overflow-y: hidden; 
+        }
+
+        /* HEADER */
+        #main-header {
+            background-color: #1a1e23;
+            color: #ffffff;
+            padding: 25px 0;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.6);
+            border-bottom: 5px solid var(--primary-color); 
+        }
+        #main-header .content-wrapper {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #main-header .header-title-group {
+            flex-grow: 1;
+        }
+        #main-header h1 {
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 5px;
+        }
+        #main-header p {
+            font-size: 1.1em;
+            font-weight: 300;
+            color: var(--secondary-color);
+            margin-top: 0;
+        }
+        
+        #btn-voltar {
+            background-color: var(--danger-color); 
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            text-transform: uppercase;
+        }
+        #btn-voltar:hover {
+            background-color: #c62828;
+            box-shadow: 0 0 10px rgba(229, 57, 53, 0.5);
+        }
+
+        .container-principal {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 30px 40px; 
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .dashboard-header h2 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        #btn-novo-modelo {
+            background-color: var(--primary-color);
+            color: #212529;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        #btn-novo-modelo:hover {
+            background-color: #00a0b0;
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Filtros por Etapa (Botões) */
+        #etapa-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .etapa-filter-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--border-color-dark);
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            font-size: 0.95em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .etapa-filter-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .etapa-filter-btn.active {
+            background-color: var(--primary-color);
+            color: #212529;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+        }
+
+        /* Filtros de Texto */
+        .linha-filtros {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .linha-filtros input {
+            padding: 12px;
+            border: 1px solid var(--border-color-dark); 
+            border-radius: 8px; 
+            font-size: 1em;
+            background-color: #383e47; 
+            color: var(--text-light);
+            box-sizing: border-box;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .linha-filtros input:hover {
+            border-color: var(--primary-color);
+        }
+        .linha-filtros input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+        }
+
+        /* Estilo de Lista para Modelos */
+        #lista-modelos {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modelo-item {
+            display: grid;
+            grid-template-columns: 1fr 2.5fr 2.5fr 1.5fr;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color-dark);
+            border-left: 5px solid var(--primary-color);
+            padding: 15px 25px; 
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-size: 1.1em;
+            gap: 20px;
+            text-align: center;
+        }
+        .modelo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
+        }
+        
+        .modelo-item .info-label {
+            font-size: 0.8em;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .modelo-item .info-value {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #empty-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--secondary-color);
+            border: 2px dashed var(--border-color-dark);
+            border-radius: 12px;
+        }
+
+
+        /* MODAL E CONTEÚDO DO MODAL */
+        .modal { 
+            position: fixed; 
+            z-index: 2000;
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px); 
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content { 
+            background-color: var(--card-bg);
+            padding: 30px; 
+            width: 90%; 
+            border-radius: 12px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+            position: relative; 
+            animation: slideIn 0.4s ease-out; 
+            border-top: 5px solid var(--primary-color);
+            max-height: 95vh;
+            overflow-y: auto;
+            text-transform: uppercase;
+        }
+
+        .modal-content::-webkit-scrollbar { width: 10px; }
+        .modal-content::-webkit-scrollbar-track { background: var(--background-dark); border-radius: 10px; }
+        .modal-content::-webkit-scrollbar-thumb { background: var(--border-color-dark); border-radius: 10px; }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: var(--secondary-color); }
+
+        #modeloModal .modal-content { 
+            max-width: 1600px;
+            background-color: var(--background-dark);
+        }
+        #novoModeloModal .modal-content { 
+            max-width: 500px;
+            height: auto;
+            overflow-y: hidden;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .close { 
+            color: var(--secondary-color); 
+            font-size: 42px; 
+            font-weight: 300; 
+            cursor: pointer; 
+            position: absolute; 
+            top: 10px; 
+            right: 25px; 
+            transition: color 0.3s;
+        }
+        .close:hover, .close:focus { color: var(--primary-color); }
+        
+        .modal-header-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            border-bottom: 2px solid var(--border-color-dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .modal-titulo {
+            font-size: 2em;
+            color: var(--primary-color);
+            margin: 0;
+            padding: 0;
+            border: none;
+            flex-grow: 1;
+        }
+        .prazo-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .prazo-group label {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            white-space: nowrap;
+        }
+        #prazo-desenvolvimento {
+            border: 2px dashed var(--border-color-dark);
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--text-light);
+            background: none;
+            width: 100px;
+            text-align: center;
+            cursor: text;
+        }
+        #prazo-desenvolvimento:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .etapas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .etapa-bloco {
+            background-color: var(--card-bg); 
+            border-radius: 12px;
+            padding: 15px 25px;
+            border: 1px solid var(--border-color-dark);
+            border-left: 5px solid var(--primary-color);
+            transition: opacity 0.4s ease, background-color 0.4s ease;
+        }
+        .etapa-bloco.bloqueado {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .etapa-bloco.bloqueado > div {
+            pointer-events: none;
+        }
+        
+        #bloco-comercial { border-color: var(--info-color); }
+        #bloco-desenvolvimento { border-color: #00bcd4; }
+        #bloco-preparacao { border-color: var(--preparacao-color); }
+        #bloco-moldagem-amostra { border-color: #ffb300; }
+        #bloco-fusao-amostra { border-color: #ff8a65; }
+        #bloco-acabamento-amostra { border-color: #81c784; }
+
+        .etapa-bloco h2 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color-dark);
+        }
+        
+        #bloco-comercial h2 { color: var(--info-color); }
+        #bloco-desenvolvimento h2 { color: #00bcd4; }
+        #bloco-preparacao h2 { color: var(--preparacao-color); }
+        #bloco-moldagem-amostra h2 { color: #ffb300; }
+        #bloco-fusao-amostra h2 { color: #ff8a65; }
+        #bloco-acabamento-amostra h2 { color: #81c784; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            background-color: var(--background-dark);
+            border: 1px solid var(--border-color-dark);
+            color: var(--text-light);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: var(--font-family-sans);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .form-group input:hover,
+        .form-group textarea:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 50px;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group.approval-group {
+             margin-left: auto;
+        }
+
+        .approval-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .approval-options input[type="radio"] {
+            display: none;
+        }
+        .approval-options label {
+            padding: 10px 20px;
+            border: 2px solid var(--border-color-dark);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .approval-options input[value="sim"]:checked + label {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        .approval-options input[value="sim"] + label:hover {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        .approval-options input[value="nao"]:checked + label {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+            box-shadow: 0 0 10px rgba(229, 57, 53, 0.5);
+        }
+        .approval-options input[value="nao"] + label:hover {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        /* Checkbox Group */
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding-top: 10px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            display: none;
+        }
+        .checkbox-group .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color-dark);
+            border-radius: 4px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .checkbox-group .checkbox-custom::after {
+            content: '✔';
+            color: white;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .checkbox-group input:checked + .checkbox-custom {
+            background-color: var(--preparacao-color);
+            border-color: var(--preparacao-color);
+        }
+
+        .anexo-group {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+        .btn-anexar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            background-color: var(--info-color);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.5em;
+            line-height: 1;
+            transition: background-color 0.3s;
+        }
+        .btn-anexar:hover {
+            background-color: #0288d1;
+        }
+
+        .anexo-preview-container {
+            margin-top: 10px;
+            background-color: var(--background-dark);
+            border: 1px solid var(--border-color-dark);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .anexo-preview-container .file-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 15px;
+        }
+        .anexo-actions a, .anexo-actions button {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 15px;
+            background: none;
+            border: none;
+            font-family: var(--font-family-sans);
+            font-size: 0.9em;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .anexo-actions button {
+            color: var(--danger-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color-dark);
+            padding-top: 25px;
+        }
+
+        .btn-salvar-alteracoes {
+            background-color: var(--success-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-salvar-alteracoes:hover {
+            background-color: #409d43;
+        }
+
+        #btn-excluir-modelo {
+            background-color: transparent;
+            border: 2px solid var(--danger-color);
+            color: var(--danger-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        #btn-excluir-modelo:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+
+        @media (max-width: 768px) {
+             #main-header .content-wrapper { 
+                 flex-direction: column; 
+                 align-items: flex-start; 
+             }
+             #main-header h1 { font-size: 2em; }
+             #btn-voltar { margin-top: 15px; }
+             .form-grid {
+                 grid-template-columns: 1fr;
+             }
+             .form-group.approval-group {
+                margin-left: 0;
+             }
+             .modelo-item {
+                 grid-template-columns: 1fr;
+                 gap: 10px;
+                 text-align: left;
+             }
+             .linha-filtros {
+                grid-template-columns: 1fr;
+             }
+        }
+    </style>
+</head>
+<body onload="carregarModelosDoBackend()">
+<header id="main-header">
+        <div class="content-wrapper">
+            <div class="header-title-group">
+                <h1>CONTROLE DE MODELOS</h1>
+                <p>ACOMPANHAMENTO DO DESENVOLVIMENTO DE NOVOS MODELOS</p>
+            </div>
+            <button id="btn-voltar" onclick="window.location.href='processos.html'">VOLTAR</button>
+        </div>
+    </header>
+    
+    <div class="container-principal">
+        <div class="dashboard-header">
+            <h2>MODELOS EM DESENVOLVIMENTO</h2>
+            <button id="btn-novo-modelo" onclick="abrirModal('novoModeloModal')">+ NOVO MODELO</button>
+        </div>
+
+        <div id="etapa-filters">
+            <button class="etapa-filter-btn active" onclick="filtrarPorEtapa('todas', this)">TODAS</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('comercial', this)">COMERCIAL</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('desenvolvimento', this)">DESENVOLVIMENTO</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('preparacao', this)">PREPARAÇÃO</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('moldagem', this)">MOLDAGEM</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('fusao', this)">FUSÃO</button>
+            <button class="etapa-filter-btn" onclick="filtrarPorEtapa('acabamento', this)">ACABAMENTO</button>
+        </div>
+
+        <div class="linha-filtros">
+            <input type="text" id="filtro-codigo" placeholder="FILTRAR POR CÓDIGO..." onkeyup="filtrarModelos()">
+            <input type="text" id="filtro-cliente" placeholder="FILTRAR POR CLIENTE..." onkeyup="filtrarModelos()">
+            <input type="text" id="filtro-modelacao" placeholder="FILTRAR POR MODELAÇÃO..." onkeyup="filtrarModelos()">
+        </div>
+
+        <div id="lista-modelos">
+            </div>
+    </div>
+
+    <div id="novoModeloModal" class="modal">
+        <div class="modal-content">
+             <span class="close" onclick="fecharModal('novoModeloModal')">&times;</span>
+             <h2 class="modal-titulo">ADICIONAR NOVO MODELO</h2>
+             <div class="form-grid" style="grid-template-columns: 1fr;">
+                 <div class="form-group">
+                    <label for="novo-cod-cliente">CÓDIGO DO CLIENTE</label>
+                    <input type="text" id="novo-cod-cliente" placeholder="EX: 1001">
+                 </div>
+                  <div class="form-group">
+                    <label for="novo-cliente">NOME CLIENTE</label>
+                    <input type="text" id="novo-cliente" placeholder="EX: INDÚSTRIAS BASTOS">
+                 </div>
+                 <div class="form-group">
+                    <label for="novo-cod-peca">CÓDIGO DA PEÇA</label>
+                    <input type="text" id="novo-cod-peca" placeholder="EX: 123.456-A">
+                 </div>
+                 <div class="form-group">
+                    <label for="novo-nome-peca">NOME DA PEÇA</label>
+                    <input type="text" id="novo-nome-peca" placeholder="EX: CARCAÇA BOMBA HPN-3">
+                 </div>
+             </div>
+             <button id="btn-salvar-novo" onclick="salvarNovoModelo()" style="width: 100%; margin-top: 25px; background-color: var(--success-color); border:none; color: white; padding: 12px 24px; font-size: 1.1em; font-weight: 700; cursor: pointer; border-radius: 8px;">SALVAR MODELO</button>
+        </div>
+    </div>
+
+    <div id="modeloModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal('modeloModal')">&times;</span>
+            <div class="modal-header-grid">
+                <h2 id="modal-modelo-titulo" class="modal-titulo">DETALHES DO MODELO</h2>
+                <div class="prazo-group">
+                    <label for="prazo-desenvolvimento">PRAZO (DIAS)</label>
+                    <span id="prazo-desenvolvimento" contenteditable="true" oninput="this.textContent = this.textContent.replace(/[^0-9]/g, '')">0</span>
+                </div>
+            </div>
+            
+            <div class="etapas-container">
+                <div class="etapa-bloco" id="bloco-comercial">
+                    <h2>COMERCIAL</h2>
+                    <div class="form-grid" style="grid-template-columns: 1fr 2fr 1fr 2fr auto;">
+                        <div class="form-group"><label for="comercial-cod-cliente">CÓD. CLIENTE</label><input type="text" id="comercial-cod-cliente"></div>
+                        <div class="form-group"><label for="comercial-nome-cliente">NOME CLIENTE</label><input type="text" id="comercial-nome-cliente"></div>
+                        <div class="form-group"><label for="comercial-cod-peca">CÓD. PEÇA</label><input type="text" id="comercial-cod-peca"></div>
+                        <div class="form-group"><label for="comercial-nome-peca">NOME DA PEÇA</label><input type="text" id="comercial-nome-peca"></div>
+                         <div class="form-group approval-group">
+                            <label>APROVADO?</label>
+                            <div class="approval-options">
+                                <input type="radio" id="comercial-aprovado-sim" name="comercial-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="comercial-aprovado-sim">SIM</label>
+                                <input type="radio" id="comercial-aprovado-nao" name="comercial-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="comercial-aprovado-nao">NÃO</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width"><label for="comercial-obs">OBSERVAÇÕES</label><textarea id="comercial-obs" rows="1"></textarea></div>
+                    </div>
+                </div>
+
+                <div class="etapa-bloco" id="bloco-desenvolvimento">
+                    <h2>DESENVOLVIMENTO DE MODELO</h2>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
+                        <div class="form-group"><label for="dev-modelacao">MODELAÇÃO</label><input type="text" id="dev-modelacao"></div>
+                        <div class="form-group"><label for="dev-data-saida">DATA DE SAÍDA</label><input type="date" id="dev-data-saida"></div>
+                        <div class="form-group"><label for="dev-previsao-retorno">PREVISÃO DE RETORNO</label><input type="date" id="dev-previsao-retorno"></div>
+                        <div class="form-group approval-group">
+                            <label>APROVADO?</label>
+                            <div class="approval-options">
+                                <input type="radio" id="dev-aprovado-sim" name="dev-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="dev-aprovado-sim">SIM</label>
+                                <input type="radio" id="dev-aprovado-nao" name="dev-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="dev-aprovado-nao">NÃO</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width"><label for="dev-obs">OBSERVAÇÕES</label><textarea id="dev-obs" rows="1"></textarea></div>
+                    </div>
+                </div>
+
+                <div class="etapa-bloco" id="bloco-preparacao">
+                    <h2>PREPARAÇÃO DO MODELO</h2>
+                    <div class="form-grid" style="grid-template-columns: 2fr 1fr auto;">
+                        <div class="form-group">
+                            <label>TAREFAS</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="prep-identificacao"><span class="checkbox-custom"></span>IDENTIFICAÇÃO</label>
+                                <label><input type="checkbox" id="prep-lote"><span class="checkbox-custom"></span>LOTE</label>
+                                <label><input type="checkbox" id="prep-pintura"><span class="checkbox-custom"></span>PINTURA</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="prep-data-inicio">DATA DE INÍCIO</label><input type="date" id="prep-data-inicio"></div>
+                        <div class="form-group approval-group">
+                             <label>APROVADO?</label>
+                            <div class="approval-options">
+                                <input type="radio" id="prep-aprovado-sim" name="prep-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="prep-aprovado-sim">SIM</label>
+                                <input type="radio" id="prep-aprovado-nao" name="prep-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="prep-aprovado-nao">NÃO</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width"><label for="prep-obs">OBSERVAÇÕES</label><textarea id="prep-obs" rows="1"></textarea></div>
+                    </div>
+                </div>
+
+
+                <div class="etapa-bloco" id="bloco-moldagem-amostra">
+                    <h2>MOLDAGEM DA AMOSTRA</h2>
+                    <div class="form-grid"  style="grid-template-columns: 1fr auto;">
+                         <div class="form-group">
+                            <label for="moldagem-programacao">PROGRAMAÇÃO MOLDAGEM</label>
+                            <input type="date" id="moldagem-programacao" onchange="atualizarEstadoEtapas()">
+                        </div>
+                        <div class="form-group approval-group">
+                            <label>APROVADO?</label>
+                           <div class="approval-options">
+                               <input type="radio" id="pcp-aprovado-sim" name="pcp-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="pcp-aprovado-sim">SIM</label>
+                               <input type="radio" id="pcp-aprovado-nao" name="pcp-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="pcp-aprovado-nao">NÃO</label>
+                           </div>
+                       </div>
+                        <div class="form-group full-width">
+                            <label for="pcp-obs">OBSERVAÇÕES</label>
+                            <textarea id="pcp-obs" name="pcp-obs" rows="1"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="etapa-bloco" id="bloco-fusao-amostra">
+                    <h2>FUSÃO DA AMOSTRA</h2>
+                    <div class="form-grid" style="grid-template-columns: 2fr auto auto;">
+                        <div class="form-group"><label for="fusao-data">DATA DE FUSÃO</label><input type="date" id="fusao-data"></div>
+                        <div class="form-group"><label>ANEXO</label><input type="file" id="fusao-anexo-input" onchange="handleFileSelect(event, 'fusao')" style="display:none;"><label for="fusao-anexo-input" class="btn-anexar" title="Anexar Arquivo">📎</label></div>
+                        <div class="form-group approval-group">
+                            <label>APROVADO?</label>
+                            <div class="approval-options">
+                                <input type="radio" id="fusao-aprovado-sim" name="fusao-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="fusao-aprovado-sim">SIM</label>
+                                <input type="radio" id="fusao-aprovado-nao" name="fusao-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="fusao-aprovado-nao">NÃO</label>
+                            </div>
+                        </div>
+                        <div class="form-group anexo-group" id="fusao-anexo-preview"></div>
+                        <div class="form-group full-width"><label for="fusao-obs">OBSERVAÇÕES</label><textarea id="fusao-obs" rows="1"></textarea></div>
+                    </div>
+                </div>
+
+                <div class="etapa-bloco" id="bloco-acabamento-amostra">
+                    <h2>ACABAMENTO DA AMOSTRA</h2>
+                    <div class="form-grid" style="grid-template-columns: 2fr auto auto;">
+                        <div class="form-group"><label for="acab-data">DATA DO ACABAMENTO</label><input type="date" id="acab-data"></div>
+                        <div class="form-group"><label>ANEXO</label><input type="file" id="acab-anexo-input" onchange="handleFileSelect(event, 'acabamento')" style="display:none;"><label for="acab-anexo-input" class="btn-anexar" title="Anexar Arquivo">📎</label></div>
+                        <div class="form-group approval-group">
+                            <label>APROVADO?</label>
+                            <div class="approval-options">
+                                <input type="radio" id="acab-aprovado-sim" name="acab-aprovado" value="sim" onchange="atualizarEstadoEtapas()"><label for="acab-aprovado-sim">SIM</label>
+                                <input type="radio" id="acab-aprovado-nao" name="acab-aprovado" value="nao" onchange="atualizarEstadoEtapas()"><label for="acab-aprovado-nao">NÃO</label>
+                            </div>
+                        </div>
+                        <div class="form-group anexo-group" id="acab-anexo-preview"></div>
+                        <div class="form-group full-width"><label for="acab-obs">OBSERVAÇÕES</label><textarea id="acab-obs" rows="1"></textarea></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-salvar-alteracoes" onclick="salvarAlteracoesModelo()">SALVAR ALTERAÇÕES</button>
+                <button id="btn-excluir-modelo" onclick="excluirModelo()">EXCLUIR MODELO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let modelosData = [];
+        let currentOpenModeloId = null;
+        let currentEtapaFilter = 'todas';
+        let tempFusaoAnexo = null;
+        let tempAcabAnexo = null;
+        
+        // Chave usada para salvar/carregar no banco de dados 'producaobancodedados.db'
+        const MODELOS_DATA_KEY = 'controle_modelos';
+        
+        const MODELO_FIELDS = [
+            'prazoDesenvolvimento', 
+            // COMERCIAL
+            'comercialCodCliente', 'comercialNomeCliente', 'comercialCodPeca', 'comercialNomePeca', 
+            'comercialObs', 'comercialAprovado',
+            // DESENVOLVIMENTO
+            'devModelacao', 'devDataSaida', 'devPrevisaoRetorno', 'devObs', 'devAprovado',
+            // PREPARAÇÃO
+            'prepIdentificacao', 'prepLote', 'prepPintura', 'prepDataInicio', 'prepObs', 'prepAprovado',
+            // MOLDAGEM
+            'pcpProgramacao', 'pcpObs', 'pcpAprovado',
+            // FUSÃO
+            'fusaoData', 'fusaoObs', 'fusaoAprovado', 'fusaoAnexoNome', 'fusaoAnexoDados',
+            // ACABAMENTO
+            'acabData', 'acabObs', 'acabAprovado', 'acabAnexoNome', 'acabAnexoDados'
+        ];
+
+
+        async function carregarModelosDoBackend() {
+            try {
+                const response = await fetch('/api/producao/load_all');
+                if (!response.ok) throw new Error('Falha ao carregar dados do backend.');
+                const data = await response.json();
+                
+                if (data && data[MODELOS_DATA_KEY]) {
+                    modelosData = data[MODELOS_DATA_KEY];
+                } else {
+                    modelosData = [];
+                }
+            } catch (error) {
+                console.error('Erro ao carregar modelos:', error);
+                modelosData = []; // Garante que a lista esteja vazia em caso de erro
+            }
+            // Chama a renderização após o carregamento (ou falha)
+            filtrarModelos();
+        }
+
+        async function saveModelsToBackend() {
+            try {
+                const dataToSave = { [MODELOS_DATA_KEY]: modelosData };
+                const response = await fetch('/api/producao/save_all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSave)
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Erro desconhecido ao salvar.');
+                // console.log('Modelos salvos com sucesso.');
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar modelos:', error);
+                alert('ERRO AO SALVAR DADOS NO SERVIDOR! Verifique o console.');
+                return false;
+            }
+        }
+
+        function renderizarDashboard(dadosParaRenderizar = modelosData) {
+            const lista = document.getElementById('lista-modelos');
+            lista.innerHTML = ''; 
+
+            if (dadosParaRenderizar.length === 0) {
+                lista.innerHTML = `<div id="empty-state"><h3>NENHUM MODELO ENCONTRADO.</h3><p>VERIFIQUE OS FILTROS OU ADICIONE UM NOVO MODELO.</p></div>`;
+                return;
+            }
+
+            dadosParaRenderizar.forEach(modelo => {
+                const item = `
+                    <div class="modelo-item" onclick="abrirModalModelo('${modelo.id}')">
+                        <div>
+                            <div class="info-label">CÓDIGO</div>
+                            <div class="info-value">${modelo.comercialCodPeca || ''}</div>
+                        </div>
+                        <div>
+                            <div class="info-label">NOME DA PEÇA</div>
+                            <div class="info-value">${modelo.comercialNomePeca || ''}</div>
+                        </div>
+                        <div>
+                            <div class="info-label">CLIENTE</div>
+                            <div class="info-value">${modelo.comercialNomeCliente || ''}</div>
+                        </div>
+                        <div>
+                            <div class="info-label">MODELAÇÃO</div>
+                            <div class="info-value">${modelo.devModelacao || ''}</div>
+                        </div>
+                    </div>
+                `;
+                lista.innerHTML += item;
+            });
+        }
+
+        function filtrarModelos() {
+            const filtroCodigo = document.getElementById('filtro-codigo').value.toLowerCase();
+            const filtroCliente = document.getElementById('filtro-cliente').value.toLowerCase();
+            const filtroModelacao = document.getElementById('filtro-modelacao').value.toLowerCase();
+
+            let dadosFiltrados = modelosData.filter(modelo => {
+                const matchCodigo = (modelo.comercialCodPeca || '').toLowerCase().includes(filtroCodigo);
+                const matchCliente = (modelo.comercialNomeCliente || '').toLowerCase().includes(filtroCliente);
+                const matchModelacao = (modelo.devModelacao || '').toLowerCase().includes(filtroModelacao);
+                return matchCodigo && matchCliente && matchModelacao;
+            });
+
+            if (currentEtapaFilter !== 'todas') {
+                dadosFiltrados = dadosFiltrados.filter(modelo => {
+                    const comercialAprovado = modelo.comercialAprovado === 'sim';
+                    const devAprovado = modelo.devAprovado === 'sim';
+                    const prepAprovado = modelo.prepAprovado === 'sim';
+                    const pcpAprovado = modelo.pcpAprovado === 'sim';
+                    const fusaoAprovada = modelo.fusaoAprovado === 'sim';
+                    const acabAprovado = modelo.acabAprovado === 'sim';
+
+                    switch (currentEtapaFilter) {
+                        case 'comercial': return !comercialAprovado;
+                        case 'desenvolvimento': return comercialAprovado && !devAprovado;
+                        case 'preparacao': return devAprovado && !prepAprovado;
+                        case 'moldagem': return prepAprovado && !pcpAprovado;
+                        case 'fusao': return pcpAprovado && !fusaoAprovada;
+                        case 'acabamento': return fusaoAprovada && !acabAprovado;
+                        default: return true;
+                    }
+                });
+            }
+
+            renderizarDashboard(dadosFiltrados);
+        }
+
+        function filtrarPorEtapa(etapa, btnElement) {
+            currentEtapaFilter = etapa;
+            document.querySelectorAll('#etapa-filters .etapa-filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            filtrarModelos();
+        }
+
+        function abrirModalModelo(modeloId) {
+            const modelo = modelosData.find(m => m.id === modeloId);
+            if (!modelo) return;
+
+            currentOpenModeloId = modelo.id; 
+            tempFusaoAnexo = null;
+            tempAcabAnexo = null;
+
+            document.getElementById('modal-modelo-titulo').innerText = `${modelo.comercialCodPeca || ''} - ${modelo.comercialNomePeca || ''}`;
+            document.getElementById('prazo-desenvolvimento').textContent = modelo.prazoDesenvolvimento || '0';
+            
+            document.getElementById('comercial-cod-cliente').value = modelo.comercialCodCliente || '';
+            document.getElementById('comercial-nome-cliente').value = modelo.comercialNomeCliente || '';
+            document.getElementById('comercial-cod-peca').value = modelo.comercialCodPeca || '';
+            document.getElementById('comercial-nome-peca').value = modelo.comercialNomePeca || '';
+            document.getElementById('comercial-obs').value = modelo.comercialObs || '';
+            document.getElementById('comercial-aprovado-sim').checked = modelo.comercialAprovado === 'sim';
+            document.getElementById('comercial-aprovado-nao').checked = modelo.comercialAprovado === 'nao';
+
+            document.getElementById('dev-modelacao').value = modelo.devModelacao || '';
+            document.getElementById('dev-data-saida').value = modelo.devDataSaida || '';
+            document.getElementById('dev-previsao-retorno').value = modelo.devPrevisaoRetorno || '';
+            document.getElementById('dev-obs').value = modelo.devObs || '';
+            document.getElementById('dev-aprovado-sim').checked = modelo.devAprovado === 'sim';
+            document.getElementById('dev-aprovado-nao').checked = modelo.devAprovado === 'nao';
+
+            document.getElementById('prep-identificacao').checked = modelo.prepIdentificacao || false;
+            document.getElementById('prep-lote').checked = modelo.prepLote || false;
+            document.getElementById('prep-pintura').checked = modelo.prepPintura || false;
+            document.getElementById('prep-data-inicio').value = modelo.prepDataInicio || '';
+            document.getElementById('prep-obs').value = modelo.prepObs || '';
+            document.getElementById('prep-aprovado-sim').checked = modelo.prepAprovado === 'sim';
+            document.getElementById('prep-aprovado-nao').checked = modelo.prepAprovado === 'nao';
+
+            document.getElementById('moldagem-programacao').value = modelo.pcpProgramacao || '';
+            document.getElementById('pcp-obs').value = modelo.pcpObs || '';
+            document.getElementById('pcp-aprovado-sim').checked = modelo.pcpAprovado === 'sim';
+            document.getElementById('pcp-aprovado-nao').checked = modelo.pcpAprovado === 'nao';
+            
+            document.getElementById('fusao-data').value = modelo.fusaoData || '';
+            document.getElementById('fusao-obs').value = modelo.fusaoObs || '';
+            document.getElementById('fusao-aprovado-sim').checked = modelo.fusaoAprovado === 'sim';
+            document.getElementById('fusao-aprovado-nao').checked = modelo.fusaoAprovado === 'nao';
+            renderAnexoPreview('fusao', modelo.fusaoAnexoNome, modelo.fusaoAnexoDados);
+
+            document.getElementById('acab-data').value = modelo.acabData || '';
+            document.getElementById('acab-obs').value = modelo.acabObs || '';
+            document.getElementById('acab-aprovado-sim').checked = modelo.acabAprovado === 'sim';
+            document.getElementById('acab-aprovado-nao').checked = modelo.acabAprovado === 'nao';
+            renderAnexoPreview('acabamento', modelo.acabAnexoNome, modelo.acabAnexoDados);
+
+            atualizarEstadoEtapas();
+            abrirModal('modeloModal');
+        }
+
+        async function salvarNovoModelo() {
+            const codCliente = document.getElementById('novo-cod-cliente').value.trim();
+            const nomeCliente = document.getElementById('novo-cliente').value.trim();
+            const codPeca = document.getElementById('novo-cod-peca').value.trim();
+            const nomePeca = document.getElementById('novo-nome-peca').value.trim();
+
+            if (!codCliente || !nomeCliente || !codPeca || !nomePeca) {
+                alert('POR FAVOR, PREENCHA TODOS OS CAMPOS.'); return;
+            }
+
+            const novoModelo = { 
+                id: 'mod' + Date.now(), 
+                prazoDesenvolvimento: '0',
+                comercialCodCliente: codCliente, 
+                comercialNomeCliente: nomeCliente, 
+                comercialCodPeca: codPeca, 
+                comercialNomePeca: nomePeca 
+                // Inicializa as outras chaves para garantir que existam no objeto
+            };
+             MODELO_FIELDS.forEach(field => {
+                if (field !== 'prazoDesenvolvimento' && !field.startsWith('comercial')) {
+                    novoModelo[field] = null;
+                }
+            });
+
+            modelosData.push(novoModelo);
+            
+            const saved = await saveModelsToBackend();
+            if (saved) {
+                filtrarModelos(); 
+                fecharModal('novoModeloModal');
+            } else {
+                 modelosData.pop(); // Reverte a adição se falhar
+            }
+        }
+
+        async function salvarAlteracoesModelo() {
+            if(!currentOpenModeloId) return;
+            const index = modelosData.findIndex(m => m.id === currentOpenModeloId);
+            if (index === -1) return;
+
+            const modelo = modelosData[index];
+            const oldModelo = { ...modelo }; // Cria uma cópia para reverter em caso de falha
+
+            modelo.prazoDesenvolvimento = document.getElementById('prazo-desenvolvimento').textContent;
+            
+            modelo.comercialCodCliente = document.getElementById('comercial-cod-cliente').value;
+            modelo.comercialNomeCliente = document.getElementById('comercial-nome-cliente').value;
+            modelo.comercialCodPeca = document.getElementById('comercial-cod-peca').value;
+            modelo.comercialNomePeca = document.getElementById('comercial-nome-peca').value;
+            modelo.comercialObs = document.getElementById('comercial-obs').value;
+            modelo.comercialAprovado = document.querySelector('input[name="comercial-aprovado"]:checked')?.value || null;
+
+            modelo.devModelacao = document.getElementById('dev-modelacao').value;
+            modelo.devDataSaida = document.getElementById('dev-data-saida').value;
+            modelo.devPrevisaoRetorno = document.getElementById('dev-previsao-retorno').value;
+            modelo.devObs = document.getElementById('dev-obs').value;
+            modelo.devAprovado = document.querySelector('input[name="dev-aprovado"]:checked')?.value || null;
+            
+            modelo.prepIdentificacao = document.getElementById('prep-identificacao').checked;
+            modelo.prepLote = document.getElementById('prep-lote').checked;
+            modelo.prepPintura = document.getElementById('prep-pintura').checked;
+            modelo.prepDataInicio = document.getElementById('prep-data-inicio').value;
+            modelo.prepObs = document.getElementById('prep-obs').value;
+            modelo.prepAprovado = document.querySelector('input[name="prep-aprovado"]:checked')?.value || null;
+
+            modelo.pcpProgramacao = document.getElementById('moldagem-programacao').value;
+            modelo.pcpObs = document.getElementById('pcp-obs').value;
+            modelo.pcpAprovado = document.querySelector('input[name="pcp-aprovado"]:checked')?.value || null;
+            
+            modelo.fusaoData = document.getElementById('fusao-data').value;
+            modelo.fusaoObs = document.getElementById('fusao-obs').value;
+            modelo.fusaoAprovado = document.querySelector('input[name="fusao-aprovado"]:checked')?.value || null;
+
+            modelo.acabData = document.getElementById('acab-data').value;
+            modelo.acabObs = document.getElementById('acab-obs').value;
+            modelo.acabAprovado = document.querySelector('input[name="acab-aprovado"]:checked')?.value || null;
+
+            if (tempFusaoAnexo) {
+                if (tempFusaoAnexo.remove) { delete modelo.fusaoAnexoNome; delete modelo.fusaoAnexoDados; } 
+                else { modelo.fusaoAnexoNome = tempFusaoAnexo.name; modelo.fusaoAnexoDados = tempFusaoAnexo.data; }
+            }
+            if (tempAcabAnexo) {
+                if (tempAcabAnexo.remove) { delete modelo.acabAnexoNome; delete modelo.acabAnexoDados; } 
+                else { modelo.acabAnexoNome = tempAcabAnexo.name; modelo.acabAnexoDados = tempAcabAnexo.data; }
+            }
+            
+            const saved = await saveModelsToBackend();
+            if (saved) {
+                alert('ALTERAÇÕES SALVAS COM SUCESSO!');
+                fecharModal('modeloModal');
+                filtrarModelos();
+            } else {
+                // Reverte as alterações no objeto local se o salvamento falhar
+                modelosData[index] = oldModelo;
+            }
+        }
+
+        async function excluirModelo() {
+            if (!currentOpenModeloId) return;
+            const password = prompt("PARA EXCLUIR, DIGITE A SENHA DE ADMINISTRADOR:");
+            if (password === "admin") {
+                if (confirm("TEM CERTEZA QUE DESEJA EXCLUIR PERMANENTEMENTE ESTE MODELO?")) {
+                    const originalLength = modelosData.length;
+                    modelosData = modelosData.filter(m => m.id !== currentOpenModeloId);
+                    
+                    const saved = await saveModelsToBackend();
+                    if (saved) {
+                        fecharModal('modeloModal');
+                        filtrarModelos(); 
+                    } else {
+                        // Se falhar, recarrega os dados (o modelo excluído deve reaparecer)
+                        await carregarModelosDoBackend();
+                        alert('ERRO AO EXCLUIR NO SERVIDOR! Operação cancelada localmente.');
+                    }
+                }
+            } else if (password !== null) {
+                alert("SENHA INCORRETA! A EXCLUSÃO FOI CANCELADA.");
+            }
+        }
+
+        function atualizarEstadoEtapas() {
+            const comercialAprovado = document.querySelector('input[name="comercial-aprovado"]:checked')?.value === 'sim';
+            const devAprovado = document.querySelector('input[name="dev-aprovado"]:checked')?.value === 'sim';
+            const prepAprovado = document.querySelector('input[name="prep-aprovado"]:checked')?.value === 'sim';
+            const pcpAprovado = document.querySelector('input[name="pcp-aprovado"]:checked')?.value === 'sim';
+            const fusaoAprovada = document.querySelector('input[name="fusao-aprovado"]:checked')?.value === 'sim';
+            const acabAprovado = document.querySelector('input[name="acab-aprovado"]:checked')?.value === 'sim';
+
+            // Regra: A etapa é bloqueada se a anterior não foi aprovada, ou se ela própria já foi aprovada.
+            // A primeira etapa (Comercial) só depende de si mesma.
+            document.getElementById('bloco-comercial').classList.toggle('bloqueado', comercialAprovado);
+            document.getElementById('bloco-desenvolvimento').classList.toggle('bloqueado', !comercialAprovado || devAprovado);
+            document.getElementById('bloco-preparacao').classList.toggle('bloqueado', !devAprovado || prepAprovado);
+            document.getElementById('bloco-moldagem-amostra').classList.toggle('bloqueado', !prepAprovado || pcpAprovado);
+            document.getElementById('bloco-fusao-amostra').classList.toggle('bloqueado', !pcpAprovado || fusaoAprovada);
+            document.getElementById('bloco-acabamento-amostra').classList.toggle('bloqueado', !fusaoAprovada || acabAprovado);
+        }
+
+        function handleFileSelect(event, tipo) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileData = { name: file.name, data: e.target.result };
+                if (tipo === 'fusao') { tempFusaoAnexo = fileData; renderAnexoPreview('fusao', fileData.name, fileData.data); } 
+                else if (tipo === 'acabamento') { tempAcabAnexo = fileData; renderAnexoPreview('acabamento', fileData.name, fileData.data); }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderAnexoPreview(tipo, nome, dados) {
+            const previewContainerId = tipo === 'fusao' ? 'fusao-anexo-preview' : 'acab-anexo-preview';
+            const previewContainer = document.getElementById(previewContainerId);
+            if (nome && dados) {
+                previewContainer.innerHTML = `
+                    <div class="anexo-preview-container">
+                        <span class="file-name">${nome}</span>
+                        <div class="anexo-actions">
+                            <a href="${dados}" target="_blank">VISUALIZAR</a>
+                            <button onclick="removerAnexo('${tipo}')">REMOVER</button>
+                        </div>
+                    </div>`;
+            } else {
+                previewContainer.innerHTML = '';
+            }
+        }
+        
+        function removerAnexo(tipo) {
+            if (tipo === 'fusao') {
+                tempFusaoAnexo = { remove: true };
+                document.getElementById('fusao-anexo-input').value = '';
+                renderAnexoPreview('fusao', null, null);
+            } else if (tipo === 'acabamento') {
+                tempAcabAnexo = { remove: true };
+                document.getElementById('acab-anexo-input').value = '';
+                renderAnexoPreview('acabamento', null, null);
+            }
+        }
+
+        function abrirModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            if(modalId === 'novoModeloModal') {
+                document.getElementById('novo-cod-cliente').focus();
+            }
+        }
+
+        function fecharModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            currentOpenModeloId = null; 
+            if (!document.querySelector('.modal.show')) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+        
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                fecharModal(event.target.id);
+            }
+        });
+
+         document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const openModal = document.querySelector('.modal.show');
+                if (openModal) {
+                    fecharModal(openModal.id);
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

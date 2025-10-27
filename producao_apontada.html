@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produção Apontada - Análise de Dados</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* === PALETA ORACLE SQL DARK (AMARELO QUEIMADO) === */
+        :root {
+            /* Tons de Cinza Escuro (Mais Pretos) */
+            --primary-bg: #101014;    
+            --secondary-bg: #1c1c20;  
+            --accent-bg: #2a2a30;     
+            --border-color: #4a4a50;  
+            
+            /* Tons de Texto (Alta Visibilidade) */
+            --text-primary: #f0f0f0;   
+            --text-secondary: #b0b0b0; 
+            --text-dark: #000000;      
+
+            /* Cores de Destaque (Amarelo Queimado) */
+            --primary-accent: #cc9900;       
+            --primary-accent-dark: #aa8000; 
+            
+            /* Cores de Feedback (Mantidas do refugo.html) */
+            --danger-color: #e57373; /* Usado para botão Limpar DB */
+            --danger-color-dark: #c62828; /* Hover do botão Limpar DB */
+            --success-color: #2ecc71; /* Cor de sucesso */
+            --warning-color: #e67e22; /* Usado no dashboard */
+            
+            /* Cores da Tabela */
+            --table-header-bg: #25252a;
+            --table-row-odd-bg: #222226; 
+            --table-row-even-bg: var(--secondary-bg); 
+            --table-hover-bg: var(--primary-accent);
+            --table-hover-text: var(--text-dark);
+            
+            /* Inputs */
+            --input-bg: var(--primary-bg);
+            --input-border: var(--border-color);
+            
+            /* Botões */
+            --button-bg: var(--accent-bg); /* Cinza escuro padrão */
+            --button-hover-bg: var(--border-color); /* Cinza mais claro hover */
+        }
+
+        /* Base e Tipografia */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-bg); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        
+        /* Design do Cabeçalho da Página */
+        header {
+            background-color: var(--accent-bg); /* MUDANÇA */
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            box-shadow: none; /* MUDANÇA */
+            border-bottom: 2px solid var(--primary-accent); /* MUDANÇA: Borda amarela */
+            z-index: 1000; 
+            position: relative;
+        }
+        .header-title-group h1 {
+            margin: 0;
+            font-size: 1.8em;
+            letter-spacing: 0.5px;
+        }
+        .header-title-group p {
+            margin-top: 2px;
+            font-size: 0.8em;
+            color: var(--text-secondary); /* MUDANÇA */
+        }
+
+        /* Grupo de Botões (Opções e Voltar) */
+        .header-buttons {
+            display: flex;
+            align-items: center; 
+            gap: 15px;
+        }
+        
+        /* Estilos Unificados para Botões (Padrão Cinza Escuro) */
+        .btn-voltar, .dropbtn, #generate-complete-report-button, #save-data-button, #save-weights-button {
+            text-decoration: none;
+            padding: 10px 20px; 
+            border-radius: 4px; /* MUDANÇA */
+            font-weight: bold;
+            font-family: inherit; 
+            font-size: 0.9em; 
+            transition: background-color 0.2s, color 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            background-color: var(--button-bg); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+            display: inline-block; 
+            line-height: 1.0; 
+            box-sizing: border-box; 
+            vertical-align: middle; 
+        }
+        .btn-voltar:hover, .dropbtn:hover, #generate-complete-report-button:hover, #save-data-button:hover, #save-weights-button:hover {
+            background-color: var(--button-hover-bg); /* MUDANÇA */
+            border-color: var(--border-color); /* MUDANÇA */
+        }
+        
+        /* Dropdown Container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        /* Dropdown: Show content when active */
+        .dropdown-content.show { 
+            display: block; 
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            min-width: 280px; 
+            box-shadow: none; /* MUDANÇA */
+            z-index: 100; 
+            right: 0;
+            top: 100%;
+            border-radius: 4px; /* MUDANÇA */
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            overflow: hidden;
+        }
+        .dropdown-content button, 
+        .dropdown-content label,
+        .dropdown-content input[type="password"] { 
+            color: var(--text-primary); /* MUDANÇA */
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border: none;
+            width: 100%;
+            text-align: left;
+            background: none;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-sizing: border-box; 
+        }
+        /* Ajuste fino para o input de senha */
+        #admin-password {
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            border-radius: 0;
+            background-color: var(--primary-bg); /* MUDANÇA */
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+        #admin-password:focus {
+            outline: none;
+            border-color: var(--primary-accent); /* MUDANÇA: Amarelo */
+        }
+
+        .dropdown-content button:hover, 
+        .dropdown-content label:hover {
+            background-color: var(--table-hover-bg); /* MUDANÇA: Amarelo */
+            color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+        /* Estilos específicos dos itens do dropdown */
+        #import-label {
+            padding: 12px 16px;
+        }
+        #import-label:hover {
+            background-color: var(--table-hover-bg); /* MUDANÇA: Amarelo */
+            color: var(--table-hover-text); /* MUDANÇA: Texto escuro */
+        }
+        #clear-db-button {
+            color: var(--danger-color); /* MUDANÇA: Vermelho */
+        }
+        #clear-db-button:hover {
+            background-color: var(--danger-color-dark);
+            color: white;
+        }
+        /* Botão Salvar Alterações (Já coberto pelo estilo padrão) */
+        
+        /* Botão Dashboard (Amarelo) */
+        #dashboard-button {
+            background-color: var(--primary-accent); /* MUDANÇA: Amarelo */
+            color: var(--text-dark); /* MUDANÇA: Texto escuro */
+            border-bottom: 1px solid var(--border-color);
+            border-color: var(--primary-accent);
+        }
+        #dashboard-button:hover {
+            background-color: var(--primary-accent-dark); /* MUDANÇA: Amarelo escuro */
+            border-color: var(--primary-accent-dark);
+        }
+        
+        /* Esconde o Input de Arquivo Padrão */
+        .hidden-file-input {
+            display: none;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: none; 
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Mensagem de Erro/Status */
+        #status-bar {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 4px; /* MUDANÇA */
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+        .error {
+            color: var(--danger-color); /* MUDANÇA */
+            font-weight: bold;
+        }
+        .file-status {
+            color: var(--text-secondary); /* MUDANÇA */
+            font-style: italic;
+        }
+        .success { 
+            color: var(--success-color); /* MUDANÇA */
+            font-weight: bold;
+        }
+        
+        /* Container dos Filtros de Período de Data */
+        #date-filter-container {
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px; /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between; 
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+        #date-filter-container label {
+            font-weight: bold;
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        #date-filter-container input[type="text"],
+        #date-filter-container input[type="date"] {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            border-radius: 4px;
+            width: 150px;
+            background-color: var(--input-bg); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        #date-filter-container input:focus { /* MUDANÇA: Foco amarelo */
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(204, 153, 0, 0.3);
+        }
+
+        /* Grupo de filtros para manter o alinhamento */
+        #filter-group-start {
+             display: flex;
+             gap: 20px;
+             align-items: center;
+        }
+        
+        /* Estilo específico de layout para o botão (mantido separado) */
+        #generate-complete-report-button {
+            margin-left: auto; /* Empurra para a direita */
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            padding: 0px 20px 20px 20px;
+            border-radius: 4px; /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            margin-top: 20px; 
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+
+        /* Design da Tabela */
+        #producao-table, #weekly-table, .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        #producao-table th, #producao-table td, #weekly-table th, #weekly-table td, .report-table th, .report-table td {
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        #producao-table thead, #weekly-table thead, .report-table thead {
+            background-color: var(--table-header-bg); /* MUDANÇA */
+            color: white;
+            position: sticky; 
+            top: 0;
+            z-index: 10;
+        }
+        /* MUDANÇA: Zebrado com cores novas */
+        #producao-table tbody tr:nth-child(odd), #weekly-table tbody tr:nth-child(odd), .report-table tbody tr:nth-child(odd) {
+             background-color: var(--table-row-odd-bg); 
+        }
+        #producao-table tbody tr:nth-child(even), #weekly-table tbody tr:nth-child(even), .report-table tbody tr:nth-child(even) {
+            background-color: var(--table-row-even-bg); 
+        }
+        /* MUDANÇA: Hover amarelo */
+        #producao-table tbody tr:hover, #weekly-table tbody tr:hover, .report-table tbody tr:hover {
+            background-color: var(--table-hover-bg);
+            color: var(--table-hover-text);
+        }
+        
+        /* Estilos para o cabeçalho da coluna Peso (un) */
+        #producao-table th:nth-child(5) {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Garante que o padding de 10px ainda se aplique à célula TH */
+            padding: 10px;
+            height: 100%; /* Permite que o flexbox ocupe o espaço total */
+            box-sizing: border-box;
+        }
+        /* Estilo para o label/checkbox no cabeçalho */
+        #producao-table th:nth-child(5) .header-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75em; /* Reduz o tamanho da fonte para o label */
+            font-weight: normal;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        /* Ajuste do checkbox */
+        #producao-table th:nth-child(5) .header-checkbox-group input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+        }
+
+        /* Melhoria para PDF: Aumentar Fontes e Espaçamento (Mantido) */
+        .report-table th {
+            padding: 10px 8px; 
+            font-size: 0.9em; 
+        }
+        .report-table td {
+            padding: 8px 8px; 
+            font-size: 0.85em; 
+        }
+        .report-table .total-row, #weekly-table .total-row {
+            font-weight: bold;
+            background-color: var(--accent-bg) !important; /* MUDANÇA: Cinza escuro */
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        
+        /* Estilos para a tabela de Produção Diária em 3 colunas (Mantido) */
+        #daily-table-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px; 
+        }
+        #daily-table-container .report-table {
+            width: 100%; 
+            flex: 1 1 30%; 
+            min-width: 250px;
+            margin: 0;
+        }
+
+        /* Linha de Filtros por Coluna */
+        .filter-row {
+            background-color: var(--accent-bg); /* MUDANÇA */
+        }
+        .filter-row input {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+            border-radius: 3px;
+            font-size: 0.85em;
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        .filter-row input:focus {
+            outline: none;
+            border-color: var(--primary-accent); /* MUDANÇA: Amarelo */
+        }
+
+        /* Removido o estilo .filter-cell-peso-un pois não é mais necessário para a célula de filtro de input */
+
+        /* Células Editáveis */
+        .data-cell-numeric.editable {
+            text-align: right;
+            background-color: rgba(204, 153, 0, 0.2); /* MUDANÇA: Fundo amarelado sutil */
+            border: 1px dashed #aaa;
+            cursor: text;
+        }
+        .data-cell-numeric {
+            text-align: right;
+        }
+        
+        /* Tabela Semanal */
+        #weekly-table-container h2 {
+            padding: 20px 0 0 20px;
+            margin-bottom: 0;
+            color: var(--text-primary); /* MUDANÇA */
+            font-size: 1.4em;
+        }
+
+        /* --- Estilos do Report no Tema Claro (PDF) --- (Mantidos, pois são para PDF claro) */
+        .pdf-light-theme {
+            background-color: white !important; 
+            color: #333 !important; 
+            padding: 30px;
+        }
+        .pdf-content-wrapper {
+            width: 100%;
+            box-sizing: border-box; 
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        .pdf-light-theme .report-header h3 {
+             font-size: 1.5em; 
+             color: #34495e; 
+             padding-bottom: 15px;
+             margin-bottom: 5px;
+             border-bottom: 3px solid #3498db; 
+        }
+        .pdf-light-theme .report-header > p {
+            font-style: italic;
+            font-size: 0.85em !important; 
+            margin-bottom: 12px; 
+            color: #7f8c8d; 
+        }
+        .pdf-light-theme .report-summary-box {
+            background-color: #ecf0f1; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            flex-wrap: wrap;
+            border: 1px solid #bdc3c7; 
+        }
+        .pdf-light-theme .report-label {
+            font-weight: bold;
+            color: #333; 
+            display: block;
+            font-size: 1.0em; 
+            margin-bottom: 2px; 
+        }
+        .pdf-light-theme .report-value {
+            font-size: 1.5em; 
+            color: #e67e22; 
+            font-weight: bold;
+            display: block;
+            margin-top: 1px; 
+        }
+        .pdf-light-theme .report-progress-section {
+            border-top: 1px dashed #95a5a6;
+            margin-top: 10px; 
+            padding-top: 10px; 
+            flex-basis: 100%; 
+        }
+        .pdf-light-theme .report-stat {
+            min-width: 150px; 
+            margin: 6px 8px 6px 0; 
+            flex-grow: 1;
+        }
+        .pdf-light-theme .report-summary-box .report-stat:last-of-type {
+             margin-right: 0;
+        }
+        .pdf-light-theme .report-table {
+            border-collapse: collapse;
+        }
+        .pdf-light-theme .report-table th {
+            background-color: #34495e; 
+            color: white;
+            border: 1px solid #2c3e50;
+        }
+        .pdf-light-theme .report-table td {
+            color: #333;
+            border: 1px solid #bdc3c7;
+        }
+        .pdf-light-theme .report-table tr:nth-child(even) {
+            background-color: #f7f7f7 !important; 
+        }
+        
+        /* === CORREÇÃO ADICIONADA === */
+        .pdf-light-theme .report-table tr:nth-child(odd) {
+            background-color: #ffffff !important; 
+        }
+        /* === FIM DA CORREÇÃO === */
+        
+        .pdf-light-theme .report-table .total-row {
+            background-color: #cccccc !important;
+            color: #333 !important;
+        }
+        .pdf-light-theme h4 {
+            color: #34495e !important;
+            font-size: 1.1em !important; 
+            margin-top: 20px; 
+        }
+        
+        /* Estilos do Gráfico */
+        #chart-container {
+             background-color: var(--secondary-bg); /* MUDANÇA */
+             border: 1px solid var(--border-color); /* MUDANÇA */
+             border-radius: 4px; /* MUDANÇA */
+             box-shadow: none; /* MUDANÇA */
+        }
+        #chart-container h2 {
+            margin-top: 0;
+            padding-top: 0;
+            font-size: 1.4em;
+            color: var(--text-primary); /* MUDANÇA */
+        }
+
+        #chart-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group-chart {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #chart-controls label { /* MUDANÇA: Cor do label do filtro do gráfico */
+             color: var(--text-primary);
+        }
+        #chart-controls select { /* MUDANÇA: Estilo do select do gráfico */
+             padding: 8px 10px;
+             border: 1px solid var(--border-color);
+             border-radius: 4px;
+             background-color: var(--input-bg);
+             color: var(--text-primary);
+        }
+        #chart-controls select:focus { /* MUDANÇA: Foco amarelo */
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(204, 153, 0, 0.3);
+        }
+        
+        /* Container para os totais do gráfico */
+        #sector-total-container {
+            display: flex;
+            gap: 20px; 
+            align-items: center;
+        }
+        
+        .sector-stat-display {
+            font-size: 1.2em; 
+            font-weight: bold;
+            color: var(--text-primary); /* MUDANÇA */
+            white-space: nowrap;
+            padding: 8px 12px;
+            border: 2px solid var(--border-color); /* MUDANÇA */
+            border-radius: 4px;
+            background-color: var(--accent-bg); /* MUDANÇA */
+            display: inline-block;
+        }
+        /* Estilo para a caixa de meta editável */
+        #sector-goal-display {
+            cursor: text;
+            border-style: dashed;
+            color: var(--primary-accent); /* MUDANÇA: Amarelo */
+        }
+        #sector-goal-display:focus {
+             outline: none;
+            border-color: var(--primary-accent); /* MUDANÇA: Amarelo */
+            background-color: var(--secondary-bg); /* MUDANÇA */
+        }
+        
+        /* Estilo para o botão minimalista de download do gráfico */
+        #export-report-button {
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            color: var(--primary-accent); /* MUDANÇA: Amarelo */
+            font-size: 1.8em; 
+            padding: 0;
+            transition: color 0.2s;
+        }
+        #export-report-button:hover {
+            color: var(--primary-accent-dark); /* MUDANÇA: Amarelo escuro */
+        }
+        
+        /* ========================================================== */
+        /* --- ESTILOS DO DASHBOARD MODAL (TELA CHEIA) --- */
+        /* ========================================================== */
+        #dashboard-modal {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--primary-bg); /* MUDANÇA */
+            z-index: 1000; 
+            overflow: hidden; 
+            box-sizing: border-box;
+            padding: 20px;
+            caret-color: transparent; 
+        }
+
+        #dashboard-content {
+            height: calc(100% - 60px); 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden; 
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            /* REMOVIDO: Borda */
+        }
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 2.2em;
+            color: var(--text-primary); /* MUDANÇA */
+            text-transform: uppercase;
+        }
+        .dashboard-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #dashboard-sector-title {
+            font-size: 1.5em;
+            color: var(--primary-accent); /* MUDANÇA: Amarelo */
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        #dashboard-timer-display { /* MUDANÇA: Cor do timer */
+             color: var(--text-secondary);
+        }
+        
+        .dashboard-close-button {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--text-primary); /* MUDANÇA */
+            cursor: pointer;
+            line-height: 1;
+        }
+        .dashboard-close-button:hover {
+            color: var(--danger-color); /* MUDANÇA */
+        }
+        
+        /* Layout de Gráficos (Flexbox) */
+        #dashboard-stats-row {
+            display: flex;
+            gap: 20px;
+            flex-basis: 120px; 
+            min-height: 120px;
+        }
+        .dashboard-stat-panel {
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            padding: 15px 20px;
+            border-radius: 4px; /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            flex-grow: 1;
+            flex-basis: 0; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+        .dashboard-stat-panel .label {
+            font-size: 1.0em;
+            color: var(--text-secondary); /* MUDANÇA */
+            margin-bottom: 5px;
+        }
+        .dashboard-stat-panel .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--text-primary); /* MUDANÇA */
+        }
+        /* Estilos de destaque para painéis importantes */
+        .dashboard-stat-panel.goal-panel {
+            background-color: rgba(204, 153, 0, 0.1); /* MUDANÇA: Fundo amarelado sutil */
+            border-left: 5px solid var(--primary-accent); /* MUDANÇA: Amarelo */
+        }
+        .dashboard-stat-panel.goal-panel .value {
+             color: var(--primary-accent); /* MUDANÇA: Amarelo */
+        }
+        /* Estilos para o painel de Refugo (Mantém destaque vermelho) */
+        .dashboard-stat-panel.refugo-panel {
+            background-color: rgba(229, 115, 115, 0.1); /* MUDANÇA: Fundo avermelhado sutil */
+            border-left: 5px solid var(--danger-color); 
+        }
+        .dashboard-stat-panel.refugo-panel .value {
+             color: var(--danger-color); 
+        }
+
+
+        #dashboard-charts-row {
+            display: flex;
+            gap: 20px;
+            flex-grow: 1; 
+            min-height: 0; 
+        }
+        .dashboard-chart-panel {
+            background-color: var(--secondary-bg); /* MUDANÇA */
+            padding: 20px;
+            border-radius: 4px; /* MUDANÇA */
+            box-shadow: none; /* MUDANÇA */
+            flex-grow: 1;
+            flex-basis: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            border: 1px solid var(--border-color); /* MUDANÇA */
+        }
+        .dashboard-chart-panel h3 {
+            margin-top: 0;
+            padding-top: 0;
+            font-size: 1.2em;
+            color: var(--text-secondary); /* MUDANÇA */
+            text-align: center;
+        }
+        .chart-canvas-wrapper {
+            flex-grow: 1;
+            min-height: 0;
+        }
+        .dashboard-chart-panel canvas {
+            max-height: 100%;
+        }
+
+
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="header-title-group">
+            <h1>PRODUÇÃO APONTADA</h1>
+            <p>Análise Detalhada e Importação de Dados</p>
+        </div>
+        
+        <div class="header-buttons">
+            
+            <div class="dropdown">
+                <button class="dropbtn">Funções</button>
+                <div class="dropdown-content">
+                    
+                    <input type="password" id="admin-password" placeholder="Senha ADMIN" onclick="event.stopPropagation();">
+                    
+                    <button id="dashboard-button" onclick="openDashboardModal()">
+                        Dashboard (Gráficos) 📈
+                    </button>
+
+                    <button id="save-data-button" onclick="saveLocalDataToDatabase()">Salvar Alterações</button>
+                    
+                    <button id="save-weights-button" onclick="confirmAndSaveWeightsToLocalStorage()">Salvar Pesos Produto (Local)</button>
+                    
+                    <input type="file" id="excelFileInput" accept=".xls,.xlsx" class="hidden-file-input" multiple>
+                    <label for="excelFileInput" id="import-label">
+                        Importar e Salvar
+                    </label>
+                    
+                    <button id="clear-db-button" onclick="clearDatabase()">Limpar DB</button>
+                    
+                    </div>
+            </div>
+            
+            <a href="processos.html" class="btn-voltar">Voltar</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="status-bar">
+            <span id="status-message" class="file-status">Carregando dados...</span>
+            <span id="error-message" class="error"></span>
+        </div>
+        
+        <div id="date-filter-container">
+            <div id="filter-group-start">
+                <div class="filter-group">
+                    <label for="dateStartFilter">Data Início:</label>
+                    <input type="date" id="dateStartFilter">
+                </div>
+                <div class="filter-group">
+                    <label for="dateEndFilter">Data Fim:</label>
+                     <input type="date" id="dateEndFilter">
+                </div>
+            </div>
+            <button id="generate-complete-report-button">
+                Gerar Relatório Completo
+            </button>
+        </div>
+
+        
+        <div id="chart-container" class="table-container" style="padding: 20px; margin-bottom: 20px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2>Gráfico de Produção Diária por Setor</h2>
+                
+                <button id="export-report-button" onclick="exportDailyChartReport()" title="Exportar Relatório PDF do Setor">
+                    ⬇️
+                </button>
+            </div>
+            
+            <div id="chart-controls">
+                <div class="filter-group-chart">
+                    <label for="sector-chart-select" style="font-weight: bold;">Selecionar Setor:</label>
+                    <select id="sector-chart-select" style="width: 250px;">
+                        </select>
+                </div>
+                <div id="sector-total-container">
+                    <span id="sector-total-display" class="sector-stat-display">Total: N/A</span> 
+                    <span id="sector-average-display" class="sector-stat-display">Média: N/A</span>
+                    <span id="sector-goal-display" class="sector-stat-display" contenteditable="true" title="Clique para editar a meta mensal">Meta: N/A</span> 
+                </div>
+            </div>
+            <div style="height: 350px;"><canvas id="dailyProductionChart"></canvas></div>
+        </div>
+
+        <div id="weekly-table-container" class="table-container">
+            <h2>Produção Total por Setor e Semana</h2>
+            <table id="weekly-table">
+                <thead>
+                    <tr>
+                        <th>Semana</th>
+                        <th>Total Semanal</th>
+                    </tr>
+                </thead>
+                <tbody id="weeklyTableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="table-container">
+            <table id="producao-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Setor</th>
+                        <th>Produto</th>
+                        <th>Liga</th>
+                        <th>
+                            Peso (un)
+                            <label for="filter-exact-weight" class="header-checkbox-group" title="Filtro exato para Peso Unitário">
+                                <input type="checkbox" id="filter-exact-weight" onchange="applyFilters()"> Exato
+                            </label>
+                        </th>
+                        <th>Quant.</th>
+                        <th>Peso Liq. Total</th>
+                    </tr>
+                    <tr class="filter-row" id="columnFilters">
+                        <td><input type="text" class="column-filter" data-column="0" placeholder="Filtrar Data"></td>
+                        <td><input type="text" class="column-filter" data-column="1" placeholder="Filtrar Setor"></td>
+                        <td><input type="text" class="column-filter" data-column="2" placeholder="Filtrar Produto"></td>
+                        <td><input type="text" class="column-filter" data-column="3" placeholder="Filtrar Liga"></td>
+                        <td><input type="text" class="column-filter" data-column="4" placeholder="Filtrar Peso (un)"></td>
+                        <td><input type="text" class="column-filter" data-column="5" placeholder="Filtrar Quant."></td>
+                        <td><input type="text" class="column-filter" data-column="6" placeholder="Filtrar Peso Total"></td>
+                    </tr>
+                </thead>
+                <tbody id="producaoTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="pdf-temp-container" class="pdf-light-theme" style="position: absolute; left: -9999px; width: 950px;">
+    </div>
+
+    <div id="dashboard-modal">
+        <div class="dashboard-header">
+            <h2>DASHBOARD DE PRODUÇÃO ACUMULADA</h2>
+            <div class="dashboard-controls">
+                <span id="dashboard-sector-title"></span>
+                <span id="dashboard-timer-display" style="font-size: 1.0em;"></span>
+                <span class="dashboard-close-button" onclick="closeDashboardModal()">&times;</span>
+            </div>
+        </div>
+
+        <div id="dashboard-content">
+             <div id="dashboard-stats-row">
+                <div class="dashboard-stat-panel">
+                    <span class="label">Total Acumulado (Kg)</span>
+                    <span class="value" id="dashboard-total-produced">0,00</span>
+                </div>
+                <div class="dashboard-stat-panel">
+                    <span class="label">Média Diária (Kg/dia)</span>
+                    <span class="value" id="dashboard-daily-average">0,00</span>
+                </div>
+                <div class="dashboard-stat-panel refugo-panel">
+                    <span class="label">Refugo (%):</span>
+                    <span class="value" id="dashboard-refugo-percentage">3,90%</span>
+                </div>
+                <div class="dashboard-stat-panel goal-panel">
+                    <span class="label">Meta Mensal (Kg)</span>
+                    <span class="value" id="dashboard-monthly-goal">0</span>
+                </div>
+                 <div class="dashboard-stat-panel goal-panel">
+                    <span class="label">Saldo para a Meta (Kg)</span>
+                    <span class="value" id="dashboard-goal-balance">0,00</span>
+                </div>
+            </div>
+
+            <div id="dashboard-charts-row">
+                <div class="dashboard-chart-panel">
+                    <h3>PRODUÇÃO DIÁRIA (KG)</h3>
+                    <div class="chart-canvas-wrapper"><canvas id="dashboardDailyChart"></canvas></div>
+                </div>
+                <div class="dashboard-chart-panel">
+                    <h3>EFICIÊNCIA VS META (%)</h3>
+                    <div class="chart-canvas-wrapper"><canvas id="dashboardEfficiencyChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Senha fixa para fins de desenvolvimento (MUDAR EM PRODUÇÃO)
+        const ADMIN_PASSWORD_HASH = 'ADMIN'; 
+        
+        // Variáveis do DOM
+        const fileInput = document.getElementById('excelFileInput');
+        const tableBody = document.getElementById('producaoTableBody');
+        const statusMessage = document.getElementById('status-message');
+        const errorMessage = document.getElementById('error-message');
+        
+        const dateStartFilter = document.getElementById('dateStartFilter');
+        const dateEndFilter = document.getElementById('dateEndFilter');
+        const columnFilters = document.querySelectorAll('.column-filter');
+        const dropbtn = document.querySelector('.dropbtn');
+        const dropdownContent = document.querySelector('.dropdown-content');
+        
+        const weeklyTableBody = document.getElementById('weeklyTableBody');
+        const weeklyTable = document.getElementById('weekly-table');
+        
+        // Variáveis para o Gráfico de Detalhes
+        const sectorChartSelect = document.getElementById('sector-chart-select');
+        const dailyChartCanvas = document.getElementById('dailyProductionChart');
+        const sectorTotalDisplay = document.getElementById('sector-total-display');
+        const sectorAverageDisplay = document.getElementById('sector-average-display');
+        const sectorGoalDisplay = document.getElementById('sector-goal-display'); 
+        let dailyChart = null; 
+        Chart.register(ChartDataLabels);
+        
+        // NOVO DOM element para o checkbox
+        const filterExactWeightCheckbox = document.getElementById('filter-exact-weight');
+
+        // Mapeamento de Colunas (Inalterado)
+        const COLUMN_MAP = {
+            DATA: 0,
+            SETOR: 1,
+            PRODUTO: 2,
+            LIGA: 3,
+            PESO_UN: 4,
+            QUANT: 5,
+            PESO_TOTAL: 6 
+        };
+        const MIN_COLUMN_INDEX = COLUMN_MAP.QUANT; 
+        // Meta Semanal Fixo (20 toneladas)
+        const WEEKLY_GOAL = 20000; 
+        
+        // Constantes para Agregação de Moldagem
+        const MOLDAGEM_SECTORS = ['moldagem leve', 'moldagem pesada', 'moldagem manual'];
+        const TOTAL_MOLDAGEM_SECTOR_KEY = 'TOTAL MOLDAGEM';
+        const GENERAL_MOLDING_KEY = 'MOLDAGEM GERAL'; 
+        
+        // Armazenamento de Dados
+        let allData = [];
+        let filteredData = []; 
+        let sectorGoals = {}; 
+        let productWeights = loadWeightsFromLocalStorage(); // NOVO: Carrega pesos salvos
+        
+        // Setores prioritários para exibição 
+        const PRIMARY_SECTORS = ['Acabamento', 'Expedição', 'Fusão'];
+        
+        const pdfTempContainer = document.getElementById('pdf-temp-container');
+        
+        // Variáveis do Dashboard
+        const dashboardModal = document.getElementById('dashboard-modal');
+        const dashboardSectorTitle = document.getElementById('dashboard-sector-title');
+        const dashboardTimerDisplay = document.getElementById('dashboard-timer-display');
+        const dashboardTotalProduced = document.getElementById('dashboard-total-produced');
+        const dashboardDailyAverage = document.getElementById('dashboard-daily-average');
+        const dashboardRefugoPercentage = document.getElementById('dashboard-refugo-percentage'); 
+        const dashboardMonthlyGoal = document.getElementById('dashboard-monthly-goal');
+        const dashboardGoalBalance = document.getElementById('dashboard-goal-balance');
+        const dashboardDailyChartCanvas = document.getElementById('dashboardDailyChart');
+        const dashboardEfficiencyChartCanvas = document.getElementById('dashboardEfficiencyChart');
+        let dashboardDailyChartInstance = null;
+        let dashboardEfficiencyChartInstance = null;
+        let dashboardSectors = [];
+        let dashboardTimer = null;
+        let currentDashboardSectorIndex = 0;
+        const CAROUSEL_INTERVAL = 10000; // 10 segundos
+
+        /**
+         * Simula um atraso para evitar que a geração de PDF se sobreponha.
+         */
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Constrói um único bloco HTML com todos os relatórios e gera um PDF multi-página.
+         */
+        async function generateCompleteReport() {
+            // 1. Pega todos os setores únicos do período filtrado
+            const uniqueSectors = new Set();
+            filteredData.forEach(rowData => {
+                uniqueSectors.add(rowData[COLUMN_MAP.SETOR] || 'Não Definido');
+            });
+
+            if (uniqueSectors.size === 0) {
+                alert('Nenhum dado de produção encontrado no período filtrado para gerar relatórios.');
+                return;
+            }
+            
+            // FILTRA "Moldagem Geral" para não entrar no relatório completo
+            const sectorArray = Array.from(uniqueSectors).sort().filter(s => s !== GENERAL_MOLDING_KEY);
+            
+            statusMessage.textContent = `Iniciando a geração do Relatório Completo (${sectorArray.length} setores)...`;
+            errorMessage.textContent = '';
+            
+            let fullReportHTML = '';
+            
+            // 2. Itera sobre os setores para construir o HTML completo
+            sectorArray.forEach((sector, index) => {
+                // Pega a meta correta
+                const isMoldagemSector = MOLDAGEM_SECTORS.includes(sector.toLowerCase());
+                const metaKey = isMoldagemSector ? TOTAL_MOLDAGEM_SECTOR_KEY : sector;
+                const metaToUseForSummary = sectorGoals[metaKey] || 0; 
+
+                // Gera o conteúdo HTML do relatório para o setor atual
+                const sectorReportHTML = generateSectorReport(sector, metaToUseForSummary);
+                
+                // Adiciona o HTML do setor ao container geral.
+                fullReportHTML += sectorReportHTML;
+            });
+            
+            // 3. Coloca o conteúdo completo no contêiner temporário
+            pdfTempContainer.innerHTML = fullReportHTML;
+
+            // 4. Exporta para PDF como um documento único.
+            try {
+                 await exportReportToPDF("Completo", 'pdf-temp-container'); 
+                 statusMessage.textContent = `Sucesso: Relatório Completo (${sectorArray.length} setores) gerado e baixado.`;
+                 statusMessage.classList.add('success');
+            } catch (error) {
+                 statusMessage.textContent = 'Falha ao gerar o Relatório Completo.';
+                 errorMessage.textContent = `Erro: ${error.message}`;
+            } finally {
+                setTimeout(() => {
+                     statusMessage.classList.remove('success');
+                     statusMessage.classList.add('file-status');
+                     pdfTempContainer.innerHTML = ''; // Limpa o container
+                }, 5000);
+            }
+        }
+        // Expondo a função globalmente para ser chamada pelo botão
+        document.getElementById('generate-complete-report-button').onclick = generateCompleteReport;
+
+
+        /**
+         * Função para gerar o Relatório PDF do setor atualmente selecionado no gráfico.
+         */
+        async function exportDailyChartReport() {
+            const selectedSector = sectorChartSelect.value;
+            if (!selectedSector || selectedSector === GENERAL_MOLDING_KEY) {
+                alert('Selecione um Setor específico (não "Moldagem Geral") no dropdown do gráfico para gerar o relatório individual.');
+                return;
+            }
+            
+            // 1. Pega a meta correta para o setor
+            const isMoldagemSector = MOLDAGEM_SECTORS.includes(selectedSector.toLowerCase());
+            const metaKey = isMoldagemSector ? TOTAL_MOLDAGEM_SECTOR_KEY : selectedSector;
+            const metaToUseForSummary = sectorGoals[metaKey] || 0; 
+            
+            // 2. Gera o relatório em HTML e coloca no contêiner temporário oculto
+            const reportContent = generateSectorReport(selectedSector, metaToUseForSummary);
+            pdfTempContainer.innerHTML = reportContent;
+
+            // 3. Exporta para PDF usando o contêiner temporário
+            await exportReportToPDF(selectedSector, 'pdf-temp-container');
+            
+            pdfTempContainer.innerHTML = ''; // Limpa o container
+        }
+        window.exportDailyChartReport = exportDailyChartReport;
+
+
+        /**
+         * Calcula a regressão linear de mínimos quadrados (y = mx + b).
+         */
+        function linearRegression(data) {
+            const productionData = data.filter(y => y > 0);
+            if (productionData.length < 2) return { m: 0, b: 0 };
+
+            let sumX = 0;
+            let sumY = 0;
+            let sumXY = 0;
+            let sumXX = 0;
+            const n = productionData.length;
+
+            for (let i = 0; i < n; i++) {
+                const x = i; 
+                const y = productionData[i];
+                sumX += x;
+                sumY += y;
+                sumXY += x * y;
+                sumXX += x * x;
+            }
+
+            const m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+
+            return { m, b };
+        }
+    
+        /**
+         * Pega o setor selecionado e chama o agregação/atualização.
+         */
+        function updateDailyProductionChartFromSelection() {
+            const selectedSector = sectorChartSelect.value;
+            if (selectedSector) {
+                const dailyData = aggregateDailyProduction(selectedSector);
+                updateDailyProductionChart(selectedSector, dailyData);
+            } else {
+                updateDailyProductionChart('Nenhum', {}); 
+            }
+        }
+
+        /**
+         * Agrega a produção diária para um setor específico.
+         */
+        function aggregateDailyProduction(sector) {
+            const dailyData = {};
+            
+            let dataForSector;
+
+            if (sector === GENERAL_MOLDING_KEY) {
+                // Se for 'Moldagem Geral', filtra por todos os setores de moldagem
+                dataForSector = filteredData.filter(rowData => 
+                    MOLDAGEM_SECTORS.includes((rowData[COLUMN_MAP.SETOR] || '').toLowerCase())
+                );
+            } else {
+                // Caso contrário, filtra pelo setor específico
+                dataForSector = filteredData.filter(rowData => 
+                    (rowData[COLUMN_MAP.SETOR] || 'Não Definido') === sector
+                );
+            }
+
+            
+            dataForSector.forEach(rowData => {
+                const dateStr = rowData[COLUMN_MAP.DATA];
+                const date = parseDate(dateStr);
+                const pesoTotal = parseFloat(rowData[COLUMN_MAP.PESO_TOTAL].replace(/\./g, '').replace(',', '.')) || 0; 
+
+                if (date && pesoTotal > 0) {
+                    const dayKey = dateStr; // DD/MM/AAAA
+                    dailyData[dayKey] = (dailyData[dayKey] || 0) + pesoTotal;
+                }
+            });
+
+            return dailyData;
+        }
+
+        /**
+         * Inicializa ou atualiza o gráfico de produção diária, incluindo dias zerados.
+         */
+        function updateDailyProductionChart(sector, dailyData) {
+            // --- 1. PREPARAÇÃO DOS DADOS PARA O GRÁFICO COMPLETO ---
+            let allChartLabels = [];
+            let allChartData = [];
+            
+            const startDateFilter = parseDate(dateStartFilter.value);
+            const endDateFilter = parseDate(dateEndFilter.value);
+            
+            const productionDates = Object.keys(dailyData).map(parseDate).filter(d => d).sort((a,b) => a - b);
+
+            const chartStartDate = startDateFilter || (productionDates.length > 0 ? productionDates[0] : new Date());
+            const chartEndDate = endDateFilter || (productionDates.length > 0 ? productionDates[productionDates.length - 1] : new Date());
+            
+            let currentDate = new Date(chartStartDate.getTime());
+            while(currentDate <= chartEndDate) {
+                const dateKey = currentDate.toLocaleDateString('pt-BR');
+                allChartLabels.push(dateKey);
+                allChartData.push(dailyData[dateKey] || 0);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            if (allChartLabels.length === 0) {
+                 allChartLabels = Object.keys(dailyData).sort((a, b) => parseDate(a).getTime() - parseDate(b).getTime());
+                 allChartData = allChartLabels.map(date => dailyData[date]);
+            }
+
+            // --- 2. CÁLCULOS DE TOTAIS E MÉDIAS (IGNORANDO ZEROS) ---
+            const productionDataPoints = allChartData.filter(value => value > 0);
+            const sectorTotal = productionDataPoints.reduce((sum, current) => sum + current, 0);
+            const productionDaysCount = productionDataPoints.length;
+            const dailyAverage = productionDaysCount > 0 ? (sectorTotal / productionDaysCount) : 0;
+            
+            sectorTotalDisplay.textContent = `Total: ${formatNumber(sectorTotal, 2)} Kg`;
+            sectorAverageDisplay.textContent = `Média: ${formatNumber(dailyAverage, 2)} Kg/dia`;
+
+            // ATUALIZA A CAIXA DE META
+            let goalKey;
+            if (sector === GENERAL_MOLDING_KEY || MOLDAGEM_SECTORS.includes(sector.toLowerCase())) {
+                goalKey = TOTAL_MOLDAGEM_SECTOR_KEY;
+            } else {
+                goalKey = sector;
+            }
+            const goal = sectorGoals[goalKey] || 0;
+            sectorGoalDisplay.textContent = `Meta: ${formatNumber(goal, 0)}`;
+            sectorGoalDisplay.setAttribute('data-goal-key', goalKey);
+
+            // --- 3. CÁLCULO DA LINHA DE TENDÊNCIA (IGNORANDO ZEROS) ---
+            const regression = linearRegression(productionDataPoints);
+            const trendLineData = [];
+            let productionDayIndex = 0;
+            for (let i = 0; i < allChartData.length; i++) {
+                if (allChartData[i] > 0) {
+                    trendLineData.push(regression.m * productionDayIndex + regression.b);
+                    productionDayIndex++;
+                } else {
+                    trendLineData.push(null); // Adiciona um gap na linha
+                }
+            }
+
+            // --- 4. CONFIGURAÇÃO E RENDERIZAÇÃO DO GRÁFICO ---
+            const chartTitle = allChartLabels.length === 0 ? 
+                                `Nenhuma produção encontrada para o Setor ${sector} no período.` :
+                                ``;
+            
+            const barDataset = {
+                label: `Prod. Diária - Setor: ${sector}`,
+                data: allChartData,
+                backgroundColor: 'rgba(204, 153, 0, 0.7)', // MUDANÇA: Amarelo
+                borderColor: 'rgba(204, 153, 0, 1)',   // MUDANÇA: Amarelo
+                borderWidth: 1,
+                datalabels: {
+                    display: (context) => context.dataset.data[context.dataIndex] > 0, 
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(), // MUDANÇA
+                    anchor: 'end',
+                    align: 'top',
+                    font: { weight: 'bold', size: 10 },
+                    formatter: (value) => formatNumber(value, 0)
+                }
+            };
+
+            const trendDataset = {
+                label: 'Linha de Tendência',
+                data: trendLineData,
+                type: 'line',
+                fill: false,
+                borderColor: 'rgba(230, 126, 34, 1)', 
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.1,
+                spanGaps: false, 
+                datalabels: {
+                    display: false
+                }
+            };
+            
+            // Buscar cores do CSS para os eixos
+            const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+            const gridColor = 'rgba(255, 255, 255, 0.1)';
+
+            if (dailyChart) {
+                dailyChart.data.labels = allChartLabels;
+                dailyChart.data.datasets = [barDataset, trendDataset];
+                dailyChart.options.plugins.title.text = chartTitle;
+                // Atualiza cores dos eixos
+                dailyChart.options.scales.y.title.color = axisColor;
+                dailyChart.options.scales.y.ticks.color = axisColor;
+                dailyChart.options.scales.x.title.color = axisColor;
+                dailyChart.options.scales.x.ticks.color = axisColor;
+                dailyChart.update();
+            } else {
+                const ctx = dailyChartCanvas.getContext('2d');
+                dailyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: allChartLabels,
+                        datasets: [barDataset, trendDataset]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, 
+                        plugins: {
+                            title: { display: true, text: chartTitle, color: axisColor, font: { size: 16 } }, 
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Peso Líquido Total (Kg)', color: axisColor }, 
+                                ticks: { color: axisColor }, 
+                                grid: { color: gridColor }
+                            },
+                            x: {
+                                title: { display: true, text: 'Data', color: axisColor }, 
+                                ticks: { color: axisColor }, 
+                                grid: { color: gridColor }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        /**
+         * Popula a caixa de seleção do gráfico com os setores presentes nos dados filtrados
+         * e atualiza o gráfico.
+         */
+        function populateSectorChartSelect() {
+            const uniqueSectors = new Set();
+            
+            filteredData.forEach(rowData => {
+                const sector = rowData[COLUMN_MAP.SETOR] || 'Não Definido';
+                uniqueSectors.add(sector);
+            });
+
+            const currentSelected = sectorChartSelect.value;
+            sectorChartSelect.innerHTML = ''; 
+            
+            const sortedSectors = Array.from(uniqueSectors).sort();
+
+            // Adiciona a opção 'Moldagem Geral' no topo
+            sectorChartSelect.insertAdjacentHTML('afterbegin', `<option value="${GENERAL_MOLDING_KEY}">${GENERAL_MOLDING_KEY}</option>`);
+
+            if (sortedSectors.length === 0) {
+                updateDailyProductionChart('Nenhum', {}); 
+                return;
+            }
+            
+            sortedSectors.forEach(sector => {
+                const option = document.createElement('option');
+                option.value = sector;
+                option.textContent = sector;
+                sectorChartSelect.appendChild(option);
+            });
+
+            if (currentSelected && (sortedSectors.includes(currentSelected) || currentSelected === GENERAL_MOLDING_KEY)) {
+                sectorChartSelect.value = currentSelected;
+            } else {
+                sectorChartSelect.value = GENERAL_MOLDING_KEY; 
+            }
+            
+            updateDailyProductionChartFromSelection(); 
+            // Atualiza a lista de setores para o Dashboard
+            dashboardSectors = [GENERAL_MOLDING_KEY, ...sortedSectors];
+        }
+
+        // Adiciona o listener para o seletor do gráfico
+        sectorChartSelect.addEventListener('change', updateDailyProductionChartFromSelection);
+        
+        // Novo campo de senha
+        const adminPasswordInput = document.getElementById('admin-password'); 
+
+        // Modal/Report Variables
+        const reportModal = document.getElementById('report-modal');
+        const sectorSelect = document.getElementById('sector-select');
+        const reportOutput = document.getElementById('report-output'); 
+        
+        // Função auxiliar para fechar o dropdown após a ação
+        function closeDropdown() {
+             dropdownContent.classList.remove('show');
+        }
+        
+        /**
+         * Verifica se a senha de administrador está correta
+         */
+        function checkAdminPassword() {
+            return adminPasswordInput.value.trim().toUpperCase() === ADMIN_PASSWORD_HASH;
+        }
+
+
+        // --- Modal/Report UI Functions ---
+        function closeReportModal() {
+            reportModal.style.display = 'none';
+        }
+        window.closeReportModal = closeReportModal;
+
+        window.addEventListener('click', (event) => {
+            if (event.target === reportModal) {
+                closeReportModal();
+            }
+        });
+
+
+        /**
+         * Adiciona o toggle para o dropdown.
+         */
+        dropbtn.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            dropdownContent.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                dropdownContent.classList.remove('show');
+            }
+        });
+
+        /**
+         * Converte uma string de data dd/mm/aaaa ou aaaa-mm-dd para um objeto Date.
+         */
+        function parseDate(dateString) {
+            if (!dateString) return null;
+            
+            let date = null;
+            let parts = String(dateString).split('/');
+            if (parts.length === 3) {
+                date = new Date(parts[2], parts[1] - 1, parts[0]); 
+            } else {
+                date = new Date(dateString);
+            }
+            
+            if (date && !isNaN(date.getTime())) {
+                date.setHours(0, 0, 0, 0); 
+                return date;
+            }
+            
+            return null;
+        }
+
+        /**
+         * Retorna o número da semana do ano para uma dada data e a chave de exibição formatada.
+         */
+        function getWeekInfo(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            const year = d.getUTCFullYear();
+            
+            const sortKey = `${year}-W${String(weekNo).padStart(2, '0')}`;
+            const displayKey = `SEMANA ${String(weekNo).padStart(2, '0')}`; 
+
+            return { sortKey, displayKey };
+        }
+        
+        /**
+         * Verifica se uma date é dia útil (segunda a sexta).
+         */
+        function isWorkDay(date) {
+            const day = date.getDay(); // 0 = Domingo, 6 = Sábado
+            return day !== 0 && day !== 6;
+        }
+
+        /**
+         * Aplica todos os filtros (Período de Data e por Coluna) simultaneamente à tabela.
+         */
+        function applyFilters() {
+            const startDateStr = dateStartFilter.value.trim(); 
+            const endDateStr = dateEndFilter.value.trim();
+            
+            const startDate = parseDate(startDateStr);
+            let endDate = parseDate(endDateStr);
+            if(endDate) {
+                 endDate = new Date(endDate.getTime());
+                 endDate.setDate(endDate.getDate() + 1);
+                 endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+            }
+
+            // NOVO: Coleta o estado do checkbox
+            const isExactWeightFilter = filterExactWeightCheckbox.checked;
+
+            // Nota: columnFilters ainda pega a lista de inputs de filtro na linha de filtros
+            const columnFilterInputs = Array.from(document.querySelectorAll('#columnFilters .column-filter'));
+            const columnFilterValues = columnFilterInputs.map(input => 
+                input.value.trim().toLowerCase()
+            );
+
+            filteredData = allData.filter(rowData => {
+                const rowDateStr = rowData[COLUMN_MAP.DATA]; 
+                
+                let periodMatch = true;
+                
+                if (startDateStr || endDateStr) {
+                    const rowDate = parseDate(rowDateStr); 
+                    
+                    if (rowDate) {
+                        if (startDate && rowDate < startDate) {
+                            periodMatch = false;
+                        }
+                        if (endDate && rowDate > endDate) { 
+                             periodMatch = false;
+                        }
+                    } else if (startDateStr || endDateStr) {
+                         periodMatch = false; 
+                    }
+                }
+
+                let columnMatch = true;
+                for (let i = 0; i < rowData.length; i++) {
+                    const filterValue = columnFilterValues[i];
+                    if (filterValue) {
+                        const cellText = String(rowData[i]).toLowerCase();
+                        
+                        // LÓGICA DE FILTRAGEM MODIFICADA PARA PESO (UN)
+                        if (i === COLUMN_MAP.PESO_UN && isExactWeightFilter) {
+                            // Filtro exato para Peso (un)
+                            if (cellText !== filterValue) {
+                                columnMatch = false;
+                                break;
+                            }
+                        } else if (!cellText.includes(filterValue)) {
+                            // Filtro de inclusão para os outros e Peso (un) quando não marcado
+                            columnMatch = false;
+                            break;
+                        }
+                    }
+                }
+                
+                return periodMatch && columnMatch;
+            });
+            
+            updateDetailTable(filteredData);
+            
+            setTimeout(() => {
+                calculateWeeklyProduction(filteredData);
+                populateSectorChartSelect(); 
+            }, 50); 
+        }
+
+        dateStartFilter.addEventListener('change', applyFilters); 
+        dateEndFilter.addEventListener('change', applyFilters);   
+        columnFilters.forEach(input => {
+            // Adiciona o listener de input
+            input.addEventListener('input', applyFilters);
+        });
+        // O listener do checkbox já está no HTML (onchange="applyFilters()")
+
+
+        /**
+         * Recria o corpo da tabela de detalhes com os dados filtrados.
+         */
+        function updateDetailTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach((rowData) => {
+                const newRow = tableBody.insertRow();
+                const originalIndex = allData.indexOf(rowData);
+                newRow.setAttribute('data-original-index', originalIndex); 
+                
+                newRow.insertCell().textContent = rowData[COLUMN_MAP.DATA] || ''; 
+                newRow.insertCell().textContent = rowData[COLUMN_MAP.SETOR] || '';
+                
+                const produtoCell = newRow.insertCell();
+                produtoCell.textContent = rowData[COLUMN_MAP.PRODUTO] || '';
+                // Adiciona o código do produto como data attribute para replicação
+                newRow.setAttribute('data-product-code', rowData[COLUMN_MAP.PRODUTO]); 
+
+                newRow.insertCell().textContent = rowData[COLUMN_MAP.LIGA] || '';
+                
+                const pesoUnStr = rowData[COLUMN_MAP.PESO_UN];
+                const quant = parseInt(rowData[COLUMN_MAP.QUANT]) || 0;
+
+                const pesoUnCell = newRow.insertCell();
+                pesoUnCell.textContent = pesoUnStr; 
+                pesoUnCell.classList.add('data-cell-numeric', 'editable');
+                pesoUnCell.setAttribute('contenteditable', 'true');
+                pesoUnCell.addEventListener('blur', (e) => recalculateAndReplicateTotal(e.target)); // NOVO EVENTO
+                pesoUnCell.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); 
+                        e.target.blur();
+                    }
+                });
+
+                const quantCell = newRow.insertCell();
+                quantCell.textContent = formatNumber(quant, 0); 
+                quantCell.classList.add('data-cell-numeric');
+
+                const pesoTotalCell = newRow.insertCell();
+                pesoTotalCell.textContent = rowData[COLUMN_MAP.PESO_TOTAL];
+                pesoTotalCell.classList.add('data-cell-numeric');
+            });
+        }
+        
+        const formatNumber = (num, decimals = 2) => {
+            if (isNaN(num) || num === null || num === '') return '';
+            const floatNum = parseFloat(num);
+            if (decimals === 0) {
+                 return parseInt(floatNum).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            }
+            return floatNum.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        };
+        
+        // --- NOVO: Funções de LocalStorage para Pesos de Produto ---
+        const LOCAL_STORAGE_KEY = 'producao_product_weights';
+
+        function loadWeightsFromLocalStorage() {
+            try {
+                const json = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return json ? JSON.parse(json) : {};
+            } catch (e) {
+                console.error("Erro ao carregar pesos do localStorage:", e);
+                return {};
+            }
+        }
+        
+        function saveWeightsToLocalStorage(weights) {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(weights));
+                productWeights = weights; 
+                statusMessage.textContent = `Sucesso: Pesos de ${Object.keys(weights).length} produtos salvos localmente.`;
+                statusMessage.classList.add('success');
+                setTimeout(() => statusMessage.classList.remove('success'), 5000);
+            } catch (e) {
+                console.error("Erro ao salvar pesos no localStorage:", e);
+                errorMessage.textContent = 'Erro ao salvar pesos localmente.';
+            }
+        }
+        
+        /**
+         * Coleta todos os Pesos Unitários válidos da memória (allData) e salva no LocalStorage
+         */
+        function confirmAndSaveWeightsToLocalStorage() {
+            closeDropdown();
+            if (!checkAdminPassword()) {
+                errorMessage.textContent = 'Erro: Senha de ADMIN incorreta para salvar pesos.';
+                statusMessage.textContent = 'Falha de Autenticação.';
+                return;
+            }
+            
+            if (!confirm('Deseja salvar os pesos unitários atuais de todos os produtos no armazenamento local para uso futuro?')) {
+                return;
+            }
+
+            const currentWeights = {};
+            let count = 0;
+
+            allData.forEach(rowData => {
+                const product = rowData[COLUMN_MAP.PRODUTO];
+                const pesoUn = parseFloat(rowData[COLUMN_MAP.PESO_UN].replace(/\./g, '').replace(',', '.'));
+                
+                // Salva apenas se for um produto definido e o peso for maior que zero
+                if (product && pesoUn > 0) {
+                    currentWeights[product] = pesoUn.toFixed(2);
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                saveWeightsToLocalStorage(currentWeights);
+            } else {
+                 statusMessage.textContent = 'Nenhum peso válido encontrado para salvar.';
+                 statusMessage.classList.add('file-status');
+            }
+        }
+        window.confirmAndSaveWeightsToLocalStorage = confirmAndSaveWeightsToLocalStorage;
+        // --- FIM: Funções de LocalStorage para Pesos de Produto ---
+
+
+        async function loadGoals() {
+            try {
+                const response = await fetch('/api/metas-producao');
+                if (!response.ok) throw new Error('Falha ao carregar metas de produção.');
+                const rawGoals = await response.json();
+                
+                sectorGoals = rawGoals.reduce((acc, goal) => {
+                    acc[goal.setor] = parseFloat(goal.meta_peso); 
+                    return acc;
+                }, {});
+            } catch (e) {
+                console.error("Erro ao carregar metas:", e);
+                sectorGoals = {}; 
+            }
+        }
+        
+        async function saveGoal(sector, goalContent) {
+            let cleanedGoalStr = String(goalContent).replace(/[^\d,.]/g, ''); 
+            cleanedGoalStr = cleanedGoalStr.replace(',', '.'); 
+            const newGoalValue = parseFloat(cleanedGoalStr) || 0;
+            
+            try {
+                const goalString = String(newGoalValue.toFixed(2)); 
+                const response = await fetch('/api/metas-producao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ setor: sector, meta_peso: goalString })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    sectorGoals[sector] = parseFloat(result.meta_peso);
+                    return true;
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao salvar meta no DB.');
+                }
+            } catch (e) {
+                console.error(`Erro ao salvar meta do setor ${sector}:`, e);
+                alert(`Erro ao salvar meta: ${e.message}`);
+                return false;
+            }
+        }
+        
+        // Listeners para salvar a meta da caixa do gráfico
+        sectorGoalDisplay.addEventListener('blur', async (e) => {
+            const goalKey = e.target.getAttribute('data-goal-key');
+            if (!goalKey) return;
+            
+            const success = await saveGoal(goalKey, e.target.textContent);
+            
+            const savedGoal = sectorGoals[goalKey] || 0;
+            e.target.textContent = `Meta: ${formatNumber(savedGoal, 0)}`;
+        });
+
+        sectorGoalDisplay.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur();
+            }
+        });
+
+        
+        /**
+         * Calcula a produção total por semana e por setor.
+         */
+        function calculateWeeklyProduction(data) {
+            const weeklyData = {}; 
+            const uniqueSectors = new Set();
+
+            data.forEach(rowData => {
+                const dateStr = rowData[COLUMN_MAP.DATA];
+                const sector = rowData[COLUMN_MAP.SETOR] || 'Não Definido';
+                const pesoTotal = parseFloat(rowData[COLUMN_MAP.PESO_TOTAL].replace(/\./g, '').replace(',', '.')) || 0; 
+
+                if (!dateStr) return; 
+
+                const date = parseDate(dateStr);
+                if (!date) return;
+                
+                const { sortKey, displayKey } = getWeekInfo(date); 
+                
+                uniqueSectors.add(sector);
+
+                if (!weeklyData[sortKey]) {
+                    weeklyData[sortKey] = { 
+                        totalSemanal: 0, 
+                        setores: {}, 
+                        displayKey: displayKey 
+                    };
+                }
+                
+                weeklyData[sortKey].setores[sector] = (weeklyData[sortKey].setores[sector] || 0) + pesoTotal;
+                weeklyData[sortKey].totalSemanal += pesoTotal;
+            });
+            
+            const allSectors = Array.from(uniqueSectors);
+            const sortedSectors = allSectors.sort((a, b) => {
+                const isA_Primary = PRIMARY_SECTORS.includes(a);
+                const isB_Primary = PRIMARY_SECTORS.includes(b);
+
+                if (isA_Primary && !isB_Primary) return -1;
+                if (!isA_Primary && isB_Primary) return 1;
+                return a.localeCompare(b);
+            });
+
+            updateWeeklyTable(weeklyData, sortedSectors);
+        }
+
+        /**
+         * Atualiza a tabela HTML semanal.
+         */
+        function updateWeeklyTable(weeklyData, sortedSectors) {
+            weeklyTableBody.innerHTML = '';
+            
+            const weeklyTableHead = weeklyTable.querySelector('thead tr:first-child');
+            weeklyTableHead.innerHTML = '<th>Semana</th>' + sortedSectors.map(s => `<th>${s}</th>`).join('') + '<th>Total Semanal</th>';
+            
+            if (Object.keys(weeklyData).length === 0) {
+                 weeklyTableBody.innerHTML = '<tr><td colspan="'+(sortedSectors.length + 2)+'" style="text-align: center; padding: 20px; color: #aaa;">Nenhum dado de produção encontrado para agregar semanalmente.</td></tr>';
+                 return;
+            }
+
+            const grandTotals = {};
+            sortedSectors.forEach(s => grandTotals[s] = 0);
+            let grandTotalGeral = 0;
+
+            const sortedWeeks = Object.keys(weeklyData).sort(); 
+
+            sortedWeeks.forEach(weekSortKey => {
+                const rowData = weeklyData[weekSortKey];
+                const row = weeklyTableBody.insertRow();
+                
+                row.insertCell().textContent = rowData.displayKey; 
+                
+                sortedSectors.forEach(sector => {
+                    const total = rowData.setores[sector] || 0;
+                    const cell = row.insertCell();
+                    cell.textContent = formatNumber(total, 2);
+                    cell.classList.add('data-cell-numeric');
+                    
+                    grandTotals[sector] += total;
+                });
+                
+                const totalCell = row.insertCell();
+                    totalCell.textContent = formatNumber(rowData.totalSemanal, 2);
+                    totalCell.classList.add('data-cell-numeric');
+                    totalCell.style.fontWeight = 'bold';
+                
+                grandTotalGeral += rowData.totalSemanal;
+            });
+
+            const totalRow = weeklyTableBody.insertRow();
+            totalRow.classList.add('total-row');
+            totalRow.insertCell().textContent = 'TOTAL GERAL';
+            
+            sortedSectors.forEach(sector => {
+                const totalCell = totalRow.insertCell();
+                totalCell.textContent = formatNumber(grandTotals[sector], 2);
+                totalCell.classList.add('data-cell-numeric');
+            });
+
+            const grandTotalCell = totalRow.insertCell();
+            grandTotalCell.textContent = formatNumber(grandTotalGeral, 2);
+            grandTotalCell.classList.add('data-cell-numeric');
+        }
+
+        // --- LÓGICA DE GERAÇÃO E EXPORTAÇÃO DE RELATÓRIO ---
+        
+        function calculateWorkDaysExcludingLast(uniqueDatesStrings) {
+            const sortedDates = Array.from(uniqueDatesStrings)
+                .map(parseDate)
+                .filter(d => d)
+                .sort((a, b) => a.getTime() - b.getTime());
+                
+            if (sortedDates.length <= 1) return 0;
+
+            let workDays = 0;
+            for(let i = 0; i < sortedDates.length - 1; i++) {
+                 if (isWorkDay(sortedDates[i])) {
+                    workDays++;
+                }
+            }
+            return workDays;
+        }
+
+        function aggregateSectorData(sector, sectorMeta) {
+            const dataByWeek = {}; 
+            const dataByDay = {};
+            const uniqueDates = new Set();
+            let totalProduced = 0;
+
+            const isGeneralMoldagem = sector === GENERAL_MOLDING_KEY;
+
+            const sectorData = filteredData.filter(rowData => {
+                const rowSector = rowData[COLUMN_MAP.SETOR] || 'Não Definido';
+                if (isGeneralMoldagem) {
+                    return MOLDAGEM_SECTORS.includes(rowSector.toLowerCase());
+                } else {
+                    return rowSector === sector;
+                }
+            });
+            
+            const isMoldagemSector = MOLDAGEM_SECTORS.includes(sector.toLowerCase());
+
+            let totalMoldagem = 0;
+            if (isGeneralMoldagem || isMoldagemSector) {
+                filteredData.forEach(rowData => { 
+                    if (MOLDAGEM_SECTORS.includes((rowData[COLUMN_MAP.SETOR] || 'Não Definido').toLowerCase())) {
+                        const pesoTotal = parseFloat(rowData[COLUMN_MAP.PESO_TOTAL].replace(/\./g, '').replace(',', '.')) || 0;
+                        totalMoldagem += pesoTotal;
+                    }
+                });
+            }
+
+
+            sectorData.forEach(rowData => {
+                const dateStr = rowData[COLUMN_MAP.DATA];
+                const date = parseDate(dateStr);
+                const pesoTotal = parseFloat(rowData[COLUMN_MAP.PESO_TOTAL].replace(/\./g, '').replace(',', '.')) || 0;
+
+                if (date && pesoTotal > 0) {
+                    const { sortKey, displayKey } = getWeekInfo(date); 
+                    const dayKey = dateStr;
+                    
+                    if (!dataByWeek[sortKey]) dataByWeek[sortKey] = { total: 0, displayKey: displayKey };
+                    dataByWeek[sortKey].total += pesoTotal;
+                    dataByDay[dayKey] = (dataByDay[dayKey] || 0) + pesoTotal;
+                    totalProduced += pesoTotal;
+                    uniqueDates.add(dayKey);
+                }
+            });
+
+            const productionDataPoints = Object.values(dataByDay).filter(value => value > 0);
+            const productionDaysCount = productionDataPoints.length;
+            const dailyAverage = productionDaysCount > 0 ? (totalProduced / productionDaysCount) : 0;
+
+            const workDaysToCalc = calculateWorkDaysExcludingLast(uniqueDates);
+            
+            let dailyTableHTML = '<h4 id="daily-table-title" style="font-size: 1.4em; padding-bottom: 5px;">Produção Diária Detalhada:</h4><div id="daily-table-container">';
+            const sortedDays = Object.keys(dataByDay).sort((a, b) => parseDate(a).getTime() - parseDate(b).getTime());
+            const numColumns = 3;
+            const chunkSize = Math.ceil(sortedDays.length / numColumns);
+            
+            function generateSubTable(days) {
+                let html = '<table class="report-table"><thead><tr><th>Data</th><th>Peso Líq. (Kg)</th></tr></thead><tbody>';
+                days.forEach(day => {
+                    html += `<tr><td>${day}</td><td class="data-cell-numeric">${formatNumber(dataByDay[day], 2)}</td></tr>`;
+                });
+                return html + `</tbody></table>`;
+            }
+
+            for (let i = 0; i < numColumns; i++) {
+                const chunk = sortedDays.slice(i * chunkSize, (i * chunkSize) + chunkSize);
+                if (chunk.length > 0) dailyTableHTML += generateSubTable(chunk);
+            }
+            dailyTableHTML += '</div>';
+            
+            let weeklyTableHTML = '<h4 style="font-size: 1.4em; padding-bottom: 5px; margin-top: 25px;">Produção Semanal:</h4><table class="report-table"><thead><tr><th>Semana</th><th>Peso Líq. Total (Kg)</th><th>Meta Semanal (Kg)</th><th>Saldo Semanal (Kg)</th><th>Eficiência (%)</th></tr></thead><tbody>';
+            const sortedWeeks = Object.keys(dataByWeek).sort();
+            const weeklyGoalToUse = WEEKLY_GOAL; 
+            
+            sortedWeeks.forEach(weekSortKey => {
+                const data = dataByWeek[weekSortKey];
+                const produced = data.total;
+                const balance = weeklyGoalToUse - produced; 
+                const efficiency = (produced / weeklyGoalToUse) * 100; 
+                const balanceColor = balance < 0 ? '#ff5555' : '#2ecc71';
+                const efficiencyColor = efficiency >= 100 ? '#2ecc71' : (efficiency >= 80 ? '#f39c12' : '#ff5555');
+
+                weeklyTableHTML += `<tr>
+                    <td>${data.displayKey}</td>
+                    <td class="data-cell-numeric">${formatNumber(produced, 2)}</td>
+                    <td class="data-cell-numeric">${formatNumber(weeklyGoalToUse, 0)}</td>
+                    <td class="data-cell-numeric" style="color: ${balanceColor};">${formatNumber(balance, 2)}</td>
+                    <td class="data-cell-numeric" style="color: ${efficiencyColor};">${efficiency.toFixed(1)}%</td>
+                </tr>`;
+            });
+            weeklyTableHTML += `</tbody></table>`; 
+            
+            const allDates = sectorData.map(d => parseDate(d[COLUMN_MAP.DATA])).filter(d => d);
+            const dateRange = allDates.length > 0 ? 
+                `${allDates.reduce((min, d) => (d < min ? d : min), allDates[0]).toLocaleDateString('pt-BR')} a ${allDates.reduce((max, d) => (d > max ? d : max), allDates[0]).toLocaleDateString('pt-BR')}`
+                : 'N/A';
+
+            return { sector, dateRange, totalProduced, workDaysToCalc, dailyTableHTML, weeklyTableHTML, totalMoldagem, dataByDay, dailyAverage };
+        }
+
+        function generateSectorReport(sector, metaToUse) {
+            const reportData = aggregateSectorData(sector, metaToUse); 
+            const isMoldagemSector = MOLDAGEM_SECTORS.includes(sector.toLowerCase()) || sector === GENERAL_MOLDING_KEY;
+            const totalToUse = isMoldagemSector ? reportData.totalMoldagem : reportData.totalProduced;
+            const saldoRestante = metaToUse - totalToUse; 
+            const percentage = metaToUse > 0 ? (totalToUse / metaToUse) * 100 : 0;
+            const percentageColor = percentage >= 100 ? '#2ecc71' : (percentage >= 80 ? '#f39c12' : '#ff5555');
+            const progressBarWidth = Math.min(percentage, 100);
+
+            let moldagemTotalStat = isMoldagemSector ? `
+                     <div class="report-stat" style="min-width: 100%; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+                        <span class="report-label" style="font-size: 1.1em; color: #555;">TOTAL GERAL DA MOLDAGEM (Total Acumulado):</span>
+                        <span class="report-value" style="color: #c0392b; font-size: 2.0em;">${formatNumber(reportData.totalMoldagem, 2)} Kg</span>
+                    </div>` : '';
+
+            const producedLabel = (isMoldagemSector && sector !== GENERAL_MOLDING_KEY) ? 'Prod. Deste Setor (Kg):' : 'Total Produzido (Kg):';
+            const metaLabel = `Meta (Kg) ${isMoldagemSector ? '(Moldagem Geral)' : '(Setor)'}:`;
+
+            return `
+                <div class="pdf-content-wrapper">
+                    <div class="report-header">
+                        <h3>Relatório de Produção - Setor: ${sector}</h3>
+                        <p>Período do Relatório: ${reportData.dateRange}. Baseado em ${filteredData.length} registros filtrados.</p>
+                    </div>
+                    <div class="report-summary-box">
+                        ${moldagemTotalStat}
+                        <div class="report-stat">
+                            <span class="report-label">${producedLabel}</span>
+                            <span class="report-value" style="color: #333;">${formatNumber(reportData.totalProduced, 2)}</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-label">${metaLabel} (Mensal)</span>
+                            <span class="report-value" style="color: #e67e22;">${formatNumber(metaToUse, 0)}</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-label">Refugo (%):</span>
+                            <span class="report-value" style="color: #c0392b;">3,90%</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="report-label">Saldo Restante para Meta (Kg):</span>
+                            <span class="report-value" style="color: ${saldoRestante < 0 ? '#ff5555' : '#3498db'};">${formatNumber(saldoRestante, 2)}</span>
+                        </div>
+                        <div class="report-progress-section">
+                            <span class="report-label">Progresso da Meta Mensal: <strong style="color: ${percentageColor};">${percentage.toFixed(1)}%</strong></span>
+                            <div class="progress-bar-container" style="background-color: #f7f7f7; border-radius: 4px; overflow: hidden; height: 25px;">
+                                <div class="progress-bar" style="width: ${progressBarWidth}%; background-color: ${percentageColor}; color: white; text-align: right; padding-right: 12px; font-size: 1.0em; font-weight: bold; line-height: 25px;">
+                                    ${percentage.toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="color: #333;">
+                        ${reportData.dailyTableHTML}
+                        ${reportData.weeklyTableHTML}
+                    </div>
+                </div>`;
+        }
+
+        async function exportReportToPDF(name, contentId) {
+            const content = document.getElementById(contentId);
+            if (!content) return Promise.reject(new Error('Conteúdo do relatório não encontrado.'));
+            
+            const fileName = `Relatorio_Producao_${name.replace(/\s/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+            const pagesToRender = content.querySelectorAll('.pdf-content-wrapper');
+            if (pagesToRender.length === 0) return Promise.reject(new Error('Nenhum conteúdo para gerar o relatório em PDF.'));
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                for (let i = 0; i < pagesToRender.length; i++) {
+                    const pageElement = pagesToRender[i];
+                    const canvas = await html2canvas(pageElement, { scale: 1.5, logging: false, useCORS: true, backgroundColor: 'white', width: 950, height: pageElement.offsetHeight });
+                    const imgData = canvas.toDataURL('image/png');
+                    const pageMargin = 5;
+                    const imgWidth = 210 - pageMargin * 2;
+                    const pageHeight = 297 - pageMargin * 2;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+
+                    if (i > 0) doc.addPage();
+                    let position = 0;
+                    
+                    doc.addImage(imgData, 'PNG', pageMargin, position + pageMargin, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', pageMargin, position + pageMargin, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                }
+                
+                doc.save(fileName);
+                return Promise.resolve();
+            } catch (error) {
+                 console.error("Erro ao gerar PDF:", error);
+                 throw new Error(`Erro de renderização para o relatório ${name}.`);
+            }
+        }
+
+        /**
+         * NOVO: Recalcula o total e, se o peso for alterado, replica para o mesmo produto.
+         */
+        async function recalculateAndReplicateTotal(editableCell) {
+            const row = editableCell.closest('tr');
+            if (!row) return;
+
+            const productCode = row.getAttribute('data-product-code');
+            const originalDataIndex = parseInt(row.getAttribute('data-original-index'), 10);
+            const quantCell = row.cells[COLUMN_MAP.QUANT];
+            const pesoTotalCell = row.cells[COLUMN_MAP.PESO_TOTAL];
+
+            // 1. LIMPEZA E CÁLCULO
+            let newPesoUn = parseFloat(editableCell.textContent.replace(/\./g, '').replace(',', '.'));
+            let quant = parseFloat(quantCell.textContent.replace(/\./g, '').replace(',', '.')); 
+            if (isNaN(newPesoUn)) newPesoUn = 0;
+            if (isNaN(quant)) quant = 0;
+            const newPesoTotal = (newPesoUn * quant);
+            
+            const newPesoUnStr = formatNumber(newPesoUn, 2) || '0,00';
+            const newPesoTotalStr = formatNumber(newPesoTotal, 2) || '0,00';
+            
+            // 2. ATUALIZA A CÉLULA
+            editableCell.textContent = newPesoUnStr;
+            pesoTotalCell.textContent = newPesoTotalStr;
+
+            // 3. ATUALIZA O allData
+            const originalRow = allData[originalDataIndex]; 
+            originalRow[COLUMN_MAP.PESO_UN] = newPesoUnStr;
+            originalRow[COLUMN_MAP.PESO_TOTAL] = newPesoTotalStr;
+
+            // 4. REPLICAÇÃO E ATUALIZAÇÃO GLOBAL
+            if (productCode && newPesoUn > 0) {
+                // Atualiza o localstorage na memória (productWeights)
+                productWeights[productCode] = newPesoUn.toFixed(2);
+                
+                // Replica para todas as outras linhas (incluindo as não filtradas)
+                replicatePesoUn(productCode, newPesoUn.toFixed(2));
+            }
+
+            // 5. REAPLICA FILTROS (Recria a tabela visual e recalcula totais)
+            applyFilters();
+        }
+        
+        /**
+         * NOVO: Replica o peso unitário para todas as linhas com o mesmo produto.
+         */
+        function replicatePesoUn(productCode, newPesoUnFixed) {
+            const newPesoUn = parseFloat(newPesoUnFixed);
+            if (isNaN(newPesoUn) || newPesoUn <= 0) return;
+
+            // Itera sobre o dado mestre (allData)
+            allData.forEach(rowData => {
+                if (rowData[COLUMN_MAP.PRODUTO] === productCode) {
+                    const currentPesoUn = parseFloat(rowData[COLUMN_MAP.PESO_UN].replace(/\./g, '').replace(',', '.'));
+                    
+                    // Aplica o novo peso apenas se for diferente
+                    if (currentPesoUn.toFixed(2) !== newPesoUn.toFixed(2)) {
+                         const quant = parseFloat(rowData[COLUMN_MAP.QUANT]) || 0;
+                         const newPesoTotal = (newPesoUn * quant);
+
+                         rowData[COLUMN_MAP.PESO_UN] = formatNumber(newPesoUn, 2) || '0,00';
+                         rowData[COLUMN_MAP.PESO_TOTAL] = formatNumber(newPesoTotal, 2) || '0,00';
+                    }
+                }
+            });
+            // Não precisa de updateDetailTable aqui, pois applyFilters() no final de recalculateAndReplicateTotal() fará isso.
+        }
+
+
+        function formatExcelDate(excelDate) {
+            if (typeof excelDate === 'string' && excelDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return excelDate.split('-').reverse().join('/'); 
+            }
+            if (typeof excelDate === 'number' && excelDate > 0) {
+                const date = new Date(Math.round((excelDate - 25569) * 86400000)); 
+                return `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
+            }
+            return String(excelDate) || ''; 
+        }
+        
+        function cleanAndParseFloat(value) {
+            if (value === null || value === undefined) return 0;
+            let cleaned = String(value).replace(/[^\d,.]/g, '').replace(',', '.');
+            return parseFloat(cleaned) || 0;
+        }
+
+        /**
+         * MODIFICADO: Aplica pesos do localStorage se o peso unitário for zero.
+         */
+        function processFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array', raw: true});
+                        const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1, raw: true, defval: ''});
+                        if (excelData.length === 0) reject(`A planilha no arquivo "${file.name}" está vazia.`);
+                        
+                        const dataToSave = [];
+                        for (let i = 0; i < excelData.length; i++) {
+                            const row = excelData[i];
+                            if (row.every(cell => cell === '' || cell === null || (typeof cell === 'number' && isNaN(cell)))) continue; 
+                            while (row.length < 7) row.push('');
+                            
+                            const productCode = String(row[COLUMN_MAP.PRODUTO] || '');
+                            let pesoUn = cleanAndParseFloat(row[COLUMN_MAP.PESO_UN]);
+                            let quant = cleanAndParseFloat(row[COLUMN_MAP.QUANT]);
+                            
+                            // NOVO: Verifica o peso no localStorage se o peso for zero
+                            if (pesoUn === 0 && productCode in productWeights) {
+                                pesoUn = parseFloat(productWeights[productCode]);
+                            }
+
+                            dataToSave.push([
+                                formatExcelDate(row[COLUMN_MAP.DATA]), 
+                                String(row[COLUMN_MAP.SETOR] || ''), 
+                                productCode, // Mantém o produto como string limpa
+                                String(row[COLUMN_MAP.LIGA] || ''), 
+                                pesoUn.toFixed(2), // Salva pesoUn formatado
+                                Math.round(quant),   
+                                (pesoUn * quant).toFixed(2) // Salva pesoTotal formatado
+                            ]);
+                        }
+                        resolve(dataToSave); 
+                    } catch (e) {
+                        reject(`Erro ao processar o arquivo "${file.name}". Verifique o formato.`);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function prepareLocalDataForSave() {
+             return allData.map(rowData => {
+                 const pesoUn = parseFloat(rowData[COLUMN_MAP.PESO_UN].replace(/\./g, '').replace(',', '.')) || 0;
+                 const pesoTotal = parseFloat(rowData[COLUMN_MAP.PESO_TOTAL].replace(/\./g, '').replace(',', '.')) || 0;
+                 return [
+                    rowData[COLUMN_MAP.DATA], rowData[COLUMN_MAP.SETOR], rowData[COLUMN_MAP.PRODUTO],
+                    rowData[COLUMN_MAP.LIGA], pesoUn.toFixed(2), parseInt(rowData[COLUMN_MAP.QUANT]) || 0,
+                    pesoTotal.toFixed(2)
+                 ];
+            });
+        }
+
+        async function saveDataToDatabase(dataToSave = []) {
+            if (!checkAdminPassword()) {
+                errorMessage.textContent = 'Erro: Senha de ADMIN incorreta para salvar/importar.';
+                statusMessage.textContent = 'Falha de Autenticação.';
+                closeDropdown(); return;
+            }
+            
+            let finalDataToSave = dataToSave.length > 0 ? dataToSave : prepareLocalDataForSave();
+
+            if (finalDataToSave.length === 0) {
+                errorMessage.textContent = 'Nenhum dado válido para salvar no DB.';
+                statusMessage.textContent = 'Operação finalizada.';
+                closeDropdown(); return;
+            }
+            
+            statusMessage.textContent = `Enviando ${finalDataToSave.length} linhas para o banco de dados...`;
+            errorMessage.textContent = '';
+            
+            try {
+                const response = await fetch('/api/producao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalDataToSave)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    statusMessage.textContent = `Sucesso: Dados de produção (${finalDataToSave.length} linhas) salvos no DB.`;
+                    statusMessage.classList.add('success');
+                    statusMessage.classList.remove('file-status');
+                    errorMessage.textContent = '';
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao salvar no DB.');
+                }
+            } catch (error) {
+                errorMessage.textContent = `Erro ao salvar no DB: ${error.message}`;
+                statusMessage.textContent = 'Falha no salvamento.';
+            } finally {
+                await loadInitialData(); 
+                setTimeout(() => statusMessage.classList.remove('success'), 500);
+                closeDropdown();
+            }
+        }
+        window.saveLocalDataToDatabase = () => saveDataToDatabase([]);
+
+        
+        async function clearDatabase() {
+            if (!checkAdminPassword()) {
+                errorMessage.textContent = 'Erro: Senha de ADMIN incorreta para limpar o DB.';
+                statusMessage.textContent = 'Falha de Autenticação.';
+                closeDropdown(); return;
+            }
+            if (!confirm('Tem certeza que deseja limpar todos os dados de Produção Apontada?')) {
+                closeDropdown(); return;
+            }
+            closeDropdown();
+            
+            tableBody.innerHTML = '';
+            weeklyTableBody.innerHTML = '';
+            statusMessage.textContent = 'Limpando dados do banco de dados...';
+            errorMessage.textContent = '';
+            
+            try {
+                const response = await fetch('/api/producao/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    statusMessage.textContent = `Sucesso: ${result.message}`;
+                    statusMessage.classList.add('success');
+                    statusMessage.classList.remove('file-status');
+                    
+                    allData = []; filteredData = [];
+                    calculateWeeklyProduction([]); 
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao limpar o DB.');
+                }
+            } catch (error) {
+                errorMessage.textContent = `Erro ao limpar o DB: ${error.message}`;
+                statusMessage.textContent = 'Falha ao limpar o DB.';
+            } finally {
+                setTimeout(() => statusMessage.classList.remove('success'), 5000);
+            }
+        }
+        window.clearDatabase = clearDatabase; 
+
+        fileInput.addEventListener('change', async (event) => {
+            if (!checkAdminPassword()) {
+                errorMessage.textContent = 'Erro: Senha de ADMIN incorreta para importar.';
+                statusMessage.textContent = 'Falha de Autenticação.';
+                event.target.value = ''; closeDropdown(); return;
+            }
+            
+            const files = event.target.files;
+            closeDropdown();
+            
+            errorMessage.textContent = ''; 
+            dateStartFilter.value = ''; dateEndFilter.value = ''; 
+            columnFilters.forEach(input => input.value = ''); 
+            // Garante que o checkbox de filtro exato é resetado na importação
+            filterExactWeightCheckbox.checked = false;
+
+            if (files.length === 0) { statusMessage.textContent = 'Nenhum arquivo carregado.'; return; }
+            statusMessage.textContent = `Processando ${files.length} arquivo(s)...`;
+            
+            let filesProcessed = 0, errors = [], allDataToSave = [];
+
+            for (const file of files) {
+                if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                    errors.push(`Arquivo "${file.name}" ignorado: formato inválido.`);
+                    continue;
+                }
+                try {
+                    allDataToSave.push(...(await processFile(file))); 
+                    filesProcessed++;
+                } catch (error) { errors.push(error); }
+            }
+            
+            if (filesProcessed > 0) {
+                statusMessage.textContent = `${filesProcessed} arquivo(s) processado(s). Iniciando salvamento...`;
+                await saveDataToDatabase(allDataToSave); 
+            } else { statusMessage.textContent = 'Nenhum arquivo válido processado.'; }
+
+            if (errors.length > 0) errorMessage.innerHTML = 'Ocorreram erros:<br>' + errors.join('<br>');
+            fileInput.value = ''; 
+        });
+
+        /**
+         * MODIFICADO: Carrega dados iniciais.
+         */
+        async function loadInitialData() {
+            errorMessage.textContent = ''; 
+            statusMessage.textContent = 'Carregando dados de produção salvos...';
+            
+            // NOVO: Atualiza productWeights a partir do localStorage
+            productWeights = loadWeightsFromLocalStorage(); 
+
+            try {
+                await loadGoals(); 
+
+                const response = await fetch('/api/producao');
+                const data = await response.json(); 
+                
+                if (data.length <= 1) { 
+                    statusMessage.textContent = 'Nenhum dado de produção encontrado no banco de dados.';
+                    allData = []; filteredData = [];
+                    calculateWeeklyProduction([]);
+                    updateDetailTable([]);
+                    populateSectorChartSelect();
+                    return;
+                }
+                
+                allData = data.slice(1).map(rowData => {
+                    let pesoUnFloat = parseFloat(rowData[4]);
+                    const productCode = String(rowData[2] || '');
+                    
+                    // NOVO: Aplica peso do localStorage ao carregar se estiver zerado
+                    if (pesoUnFloat === 0 && productCode in productWeights) {
+                        pesoUnFloat = parseFloat(productWeights[productCode]);
+                        rowData[4] = pesoUnFloat.toFixed(2); // Atualiza o dado com o peso do LS
+                        rowData[6] = (pesoUnFloat * (parseInt(rowData[5]) || 0)).toFixed(2); // Recalcula total
+                    }
+
+                    return [
+                        rowData[0], rowData[1], rowData[2], rowData[3], 
+                        formatNumber(parseFloat(rowData[4]), 2) || '0,00',  
+                        parseInt(rowData[5]) || 0,   
+                        formatNumber(parseFloat(rowData[6]), 2) || '0,00'
+                    ];
+                });
+                
+                statusMessage.textContent = `Dados de produção carregados com sucesso (${allData.length} registros).`;
+                applyFilters(); 
+            } catch (error) {
+                errorMessage.textContent = 'Erro ao carregar dados de produção do banco de dados.';
+                statusMessage.textContent = 'Falha ao carregar.';
+                allData = []; filteredData = [];
+            }
+        }
+        
+        // ==========================================================
+        // --- FUNÇÕES DO DASHBOARD ---
+        // ==========================================================
+
+        function openDashboardModal() {
+            closeDropdown();
+            if (dashboardSectors.length === 0) {
+                alert('Não há setores com dados de produção para exibir no dashboard. Verifique o período de filtro.');
+                return;
+            }
+            document.body.style.overflow = 'hidden'; 
+            dashboardModal.style.display = 'block';
+            loadDashboard();
+        }
+
+        function closeDashboardModal() {
+            clearInterval(dashboardTimer);
+            dashboardTimer = null;
+            dashboardModal.style.display = 'none';
+            document.body.style.overflow = ''; 
+        }
+        window.closeDashboardModal = closeDashboardModal;
+
+
+        function loadDashboard() {
+            currentDashboardSectorIndex = 0;
+            if (dashboardSectors.length > 0) {
+                updateDashboardView(dashboardSectors[currentDashboardSectorIndex]);
+                startDashboardCarousel();
+            } else {
+                 dashboardSectorTitle.textContent = "Nenhum dado para exibir";
+                 dashboardTotalProduced.textContent = "N/A";
+                 dashboardDailyAverage.textContent = "N/A";
+                 dashboardMonthlyGoal.textContent = "N/A";
+                 dashboardGoalBalance.textContent = "N/A";
+            }
+        }
+
+
+        function startDashboardCarousel() {
+            if (dashboardTimer) clearInterval(dashboardTimer);
+            
+            let timeLeft = CAROUSEL_INTERVAL / 1000;
+            dashboardTimerDisplay.textContent = `Próximo: ${timeLeft}s`;
+
+            const updateTimerDisplay = () => {
+                timeLeft--;
+                if (timeLeft < 0) timeLeft = (CAROUSEL_INTERVAL / 1000) - 1;
+                dashboardTimerDisplay.textContent = `Próximo: ${timeLeft}s`;
+            };
+
+            dashboardTimer = setInterval(() => {
+                currentDashboardSectorIndex = (currentDashboardSectorIndex + 1) % dashboardSectors.length;
+                updateDashboardView(dashboardSectors[currentDashboardSectorIndex]);
+                timeLeft = (CAROUSEL_INTERVAL / 1000); 
+                updateTimerDisplay(); 
+            }, CAROUSEL_INTERVAL);
+            
+            const countdownTimer = setInterval(updateTimerDisplay, 1000); 
+            
+            updateTimerDisplay(); 
+        }
+
+
+        /**
+         * Atualiza todos os painéis e gráficos do dashboard para um setor.
+         */
+        function updateDashboardView(sector) {
+            dashboardSectorTitle.textContent = sector;
+
+            const metaKey = sector === GENERAL_MOLDING_KEY ? TOTAL_MOLDAGEM_SECTOR_KEY : sector;
+            
+            // --- INÍCIO DA MODIFICAÇÃO SOLICITADA ---
+            // Define metas fixas para setores específicos APENAS no dashboard
+            let goal = 0;
+            const lowerCaseSector = sector.toLowerCase();
+
+            if (metaKey === TOTAL_MOLDAGEM_SECTOR_KEY) {
+                goal = 80000; // Meta fixa para MOLDAGEM GERAL
+            } else if (lowerCaseSector === 'moldagem leve') {
+                goal = 27000; // Meta fixa
+            } else if (lowerCaseSector === 'moldagem manual') {
+                goal = 27000; // Meta fixa
+            } else if (lowerCaseSector === 'moldagem pesada') {
+                goal = 27000; // Meta fixa
+            } else {
+                // Para todos os outros setores, usa a meta carregada do DB
+                goal = sectorGoals[metaKey] || 0;
+            }
+            // --- FIM DA MODIFICAÇÃO ---
+            
+            const reportData = aggregateSectorData(sector, goal); 
+            
+            const totalProduced = sector === GENERAL_MOLDING_KEY ? reportData.totalMoldagem : reportData.totalProduced; 
+            const dailyAverage = reportData.dailyAverage; 
+            const saldoRestante = goal - totalProduced;
+            const efficiencyPercentage = goal > 0 ? (totalProduced / goal) * 100 : 0;
+
+
+            if (totalProduced === 0 && goal === 0) {
+                 dashboardTotalProduced.textContent = "0,00";
+                 dashboardDailyAverage.textContent = "0,00";
+                 dashboardMonthlyGoal.textContent = "0";
+                 dashboardGoalBalance.textContent = "0,00";
+            } else {
+                 dashboardTotalProduced.textContent = formatNumber(totalProduced, 2);
+                 dashboardDailyAverage.textContent = formatNumber(dailyAverage, 2);
+                 dashboardMonthlyGoal.textContent = formatNumber(goal, 0);
+                 dashboardGoalBalance.textContent = formatNumber(saldoRestante, 2);
+                 // MUDANÇA: Usa variáveis CSS para cor do saldo
+                 dashboardGoalBalance.style.color = saldoRestante < 0 ? getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim() : getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim(); 
+            }
+
+            dashboardRefugoPercentage.textContent = '3,90%'; 
+            
+            renderDashboardDailyChart(sector, reportData.dataByDay);
+            renderDashboardEfficiencyChart(sector, efficiencyPercentage, totalProduced, goal);
+        }
+
+        /**
+         * Renderiza o Gráfico de Produção Diária (Barras) para o Dashboard.
+         */
+        function renderDashboardDailyChart(sector, dailyData) {
+             let allChartLabels = [];
+            let allChartData = [];
+            
+            const startDateFilter = parseDate(dateStartFilter.value);
+            const endDateFilter = parseDate(dateEndFilter.value);
+            
+            const productionDates = Object.keys(dailyData).map(parseDate).filter(d => d).sort((a,b) => a - b);
+
+            const chartStartDate = startDateFilter || (productionDates.length > 0 ? productionDates[0] : new Date());
+            const chartEndDate = endDateFilter || (productionDates.length > 0 ? productionDates[productionDates.length - 1] : new Date());
+            
+            let currentDate = new Date(chartStartDate.getTime());
+            while(currentDate <= chartEndDate) {
+                const dateKey = currentDate.toLocaleDateString('pt-BR');
+                allChartLabels.push(dateKey);
+                allChartData.push(dailyData[dateKey] || 0);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            const productionDataPoints = allChartData.filter(value => value > 0);
+            const regression = linearRegression(productionDataPoints);
+            const trendLineData = [];
+            let productionDayIndex = 0;
+            for (let i = 0; i < allChartData.length; i++) {
+                if (allChartData[i] > 0) {
+                    trendLineData.push(regression.m * productionDayIndex + regression.b);
+                    productionDayIndex++;
+                } else {
+                    trendLineData.push(null); 
+                }
+            }
+            
+            const barDataset = {
+                label: `Prod. Diária - Setor: ${sector}`,
+                data: allChartData,
+                backgroundColor: 'rgba(204, 153, 0, 0.7)', // MUDANÇA: Amarelo
+                borderColor: 'rgba(204, 153, 0, 1)',   // MUDANÇA: Amarelo
+                borderWidth: 1,
+                datalabels: { display: false } 
+            };
+            
+            const trendDataset = {
+                label: 'Linha de Tendência',
+                data: trendLineData,
+                type: 'line',
+                fill: false,
+                borderColor: 'rgba(230, 126, 34, 1)', 
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.1,
+                spanGaps: false, 
+                datalabels: {
+                    display: false
+                }
+            };
+            
+            // Buscar cores do CSS para os eixos do dashboard
+            const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+            const gridColor = 'rgba(255, 255, 255, 0.1)';
+
+            const config = {
+                type: 'bar',
+                data: { labels: allChartLabels, datasets: [barDataset, trendDataset] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true, title: { display: true, text: 'Kg', color: axisColor }, ticks: { color: axisColor }, grid: { color: gridColor } },
+                        x: { ticks: { color: axisColor }, grid: { display: false } }
+                    }
+                }
+            };
+
+            if (dashboardDailyChartInstance) {
+                dashboardDailyChartInstance.data = config.data;
+                dashboardDailyChartInstance.options = config.options;
+                dashboardDailyChartInstance.update();
+            } else {
+                dashboardDailyChartInstance = new Chart(dashboardDailyChartCanvas, config);
+            }
+        }
+
+        /**
+         * Renderiza o Gráfico de Eficiência (Donut) para o Dashboard.
+         */
+        function renderDashboardEfficiencyChart(sector, percentage, produced, goal) {
+            const remaining = Math.max(0, goal - produced);
+            const data = [produced, remaining];
+            const labels = ['Produzido', 'Restante'];
+            
+            // --- CORREÇÃO AQUI ---
+            // Acessa as variáveis CSS usando getComputedStyle
+            const computedStyle = getComputedStyle(document.documentElement);
+            const percentageColor = percentage >= 100 ? computedStyle.getPropertyValue('--success-color').trim() : (percentage >= 80 ? computedStyle.getPropertyValue('--warning-color').trim() : computedStyle.getPropertyValue('--danger-color').trim());
+            // --- FIM DA CORREÇÃO ---
+
+            if (produced === 0 && goal === 0) {
+                 data[0] = 1; 
+                 data[1] = 0;
+            }
+
+            // Buscar cores do CSS para o gráfico donut
+            const textColor = computedStyle.getPropertyValue('--text-primary').trim();
+            const bgColor = computedStyle.getPropertyValue('--primary-bg').trim();
+            const remainingColor = '#4a4a50'; // Cinza escuro para 'Restante'
+
+            const config = {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [percentageColor, remainingColor], 
+                        hoverBackgroundColor: [percentageColor, '#6a6a6a'],
+                        borderWidth: 1,
+                        borderColor: bgColor 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: { display: true, position: 'bottom', labels: { color: textColor } }, 
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${formatNumber(context.parsed, 2)} Kg` } },
+                        datalabels: {
+                            color: textColor, 
+                            formatter: (value, context) => {
+                                if (context.dataIndex === 0) {
+                                    return percentage.toFixed(1) + '%';
+                                } else {
+                                     return '';
+                                }
+                            },
+                            anchor: 'center',
+                            align: 'center',
+                            font: { size: 18, weight: 'bold' }
+                        }
+                    }
+                }
+            };
+
+            if (dashboardEfficiencyChartInstance) {
+                dashboardEfficiencyChartInstance.data = config.data;
+                dashboardEfficiencyChartInstance.options = config.options;
+                dashboardEfficiencyChartInstance.update();
+            } else {
+                dashboardEfficiencyChartInstance = new Chart(dashboardEfficiencyChartCanvas, config);
+            }
+        }
+
+        // FIM DAS FUNÇÕES DO DASHBOARD
+        // ==========================================================
+
+        window.onload = function() {
+            loadInitialData(); 
+        };
+    </script>
+
+</body>
+</html>

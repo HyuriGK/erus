@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análise de Faturamento - Por Cliente (Tema Dark)</title>
+    <style>
+        /* ========================================================= */
+        /* ESTILOS GERAIS E LAYOUT - DARK THEME */
+        /* ========================================================= */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px; 
+            background-color: #1e293b; /* Fundo Escuro Principal (Slate 800) */
+            color: #f8fafc; /* Cor do Texto Principal (Slate 50) */
+            font-size: 14px; 
+        }
+        
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #334155; /* Borda mais escura */
+            padding-bottom: 8px; 
+        }
+
+        h1 {
+            color: #93c5fd; /* Azul Claro para Destaque */
+            margin: 0; 
+            padding: 0;
+            font-size: 1.8em; 
+        }
+
+        h2 {
+            color: #e2e8f0; /* Azul Acinzentado Claro */
+            margin-top: 15px; 
+            margin-bottom: 12px; 
+            font-size: 1.4em;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid #475569; /* Linha divisória escura */
+            margin: 15px 0; 
+        }
+
+        /* ESTILOS DE BOTÕES DE AÇÃO - DARK THEME */
+
+        /* Cor de destaque (vermelho) mantida, mas ajustada para fundo escuro */
+        .back-button, .dropdown-toggle-button {
+            background-color: #f87171; /* Vermelho Mais Claro */
+            color: #1f2937; /* Texto Escuro */
+            padding: 8px 15px; 
+            border: none;
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3); /* Sombra mais escura */
+            font-size: 0.9em;
+            text-decoration: none; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px; 
+            box-sizing: border-box;
+        }
+        .back-button:hover {
+            background-color: #ef4444; /* Vermelho Padrão no Hover */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+        }
+        
+        .dropdown-toggle-button {
+             background-color: #f87171; 
+             margin-right: 10px;
+        }
+        .dropdown-toggle-button:hover {
+             background-color: #ef4444; 
+        }
+
+        /* ========================================================= */
+        /* ESTILO DO DROPDOWN DE FUNÇÕES - DARK THEME */
+        /* ========================================================= */
+        .header-controls-wrapper {
+            display: flex; 
+            align-items: center;
+        }
+        
+        .functions-dropdown {
+            position: relative;
+            display: inline-block;
+            height: 34px; 
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0; 
+            top: 100%; 
+            background-color: #334155; /* Fundo do Dropdown Escuro */
+            min-width: 180px;
+            box-shadow: 0 8px 16px 0px rgba(0,0,0,0.5);
+            z-index: 10;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 5px; 
+        }
+
+        .functions-dropdown.open .dropdown-content {
+            display: flex; 
+            flex-direction: column;
+            gap: 8px; 
+        }
+        
+        .file-upload-wrapper, .clear-data-button {
+            position: relative;
+            display: inline-block;
+            width: 100%; 
+        }
+        
+        /* Botão Importar Dados (Azul Escuro) */
+        .custom-file-button, .clear-data-button {
+            background-color: #3b82f6; /* Azul Claro (Destaque Primário) */
+            color: white;
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            display: block; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+            font-size: 1em;
+            border: none;
+            text-align: center;
+            white-space: nowrap; 
+        }
+        .custom-file-button:hover {
+            background-color: #2563eb; 
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Botão Limpar Banco (Roxo/Magenta Escuro) */
+        .clear-data-button {
+            background-color: #db2777; /* Rosa Escuro */
+            padding: 10px 15px;
+        }
+        .clear-data-button:hover {
+            background-color: #be185d;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        #fileInput {
+            position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+
+        /* ========================================================= */
+        /* ESTILO DO SPINNER DE CARREGAMENTO - DARK THEME */
+        /* ========================================================= */
+        #loadingSpinner {
+            display: none; 
+            position: fixed;
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.8); /* Fundo semi-transparente escuro */
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .spinner-icon {
+            border: 8px solid #334155; /* Borda clara */
+            border-top: 8px solid #93c5fd; /* Borda de destaque */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+
+        /* ========================================================= */
+        /* ESTILO PARA A LINHA DE FILTROS (PERÍODO) - DARK THEME */
+        /* ========================================================= */
+        .filter-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: #334155; /* Fundo do filtro escuro */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .filter-controls-row h3 {
+            margin: 0;
+            font-size: 1em;
+            font-weight: 600;
+            color: #cbd5e1; /* Texto claro */
+        }
+        .filter-controls-row input[type="date"] {
+            padding: 6px 10px;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background-color: #475569; /* Fundo do input escuro */
+            color: #f8fafc; /* Texto do input claro */
+        }
+        .clear-filter-button {
+            background-color: #64748b; /* Botão de controle cinza escuro */
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+            margin-left: auto; 
+        }
+        .clear-filter-button:hover {
+            background-color: #475569;
+        }
+
+
+        /* Estilos de Sumários, Gráficos e Tabela - DARK THEME */
+        #periodoAnalizado {
+            font-weight: 600;
+            color: #a7f3d0; /* Verde Claro */
+            margin-bottom: 15px;
+            padding: 8px 10px;
+            background-color: #166534; /* Fundo verde escuro */
+            border-left: 5px solid #34d399; /* Borda verde clara */
+            border-radius: 4px;
+        }
+        .summary-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .summary-panels {
+            display: flex;
+            flex: 1; 
+            gap: 10px; 
+            min-width: 420px; 
+        }
+        .summary-card {
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Sombra mais forte */
+            color: #fff;
+            text-align: center;
+            min-width: 200px; 
+            transition: transform 0.2s;
+        }
+        /* Card Valor Total */
+        #cardValorTotal {
+            background-color: #f97316; /* Laranja Escuro */
+            flex: 1 1 200px; 
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: flex-start; 
+            padding-right: 40px; 
+            position: relative;
+        }
+        .summary-title {
+            font-size: 1em;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            line-height: 1.2;
+            text-align: left;
+        }
+        .summary-value {
+            font-size: 1.8em; 
+            font-weight: 700;
+            text-align: left; 
+            width: 100%;
+        }
+        #toggleValorBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1em;
+            line-height: 30px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        #toggleValorBtn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        /* Card Peso Total */
+        .summary-card.peso { 
+            background-color: #047857; /* Verde Escuro */
+            flex: 1; 
+        } 
+        /* Card Peso Médio */
+        .summary-card.medio { 
+            background-color: #1d4ed8; /* Azul Escuro */
+            flex: 1; 
+        } 
+        
+        .charts-container {
+            display: flex;
+            gap: 10px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap;
+        }
+        .chart-panel {
+            flex: 1 1 31%; 
+            min-width: 300px; 
+        }
+        .chartContainer {
+            background-color: #334155; /* Fundo do gráfico escuro */
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            margin-bottom: 0; 
+            min-height: 300px; 
+            height: 350px; 
+        }
+        #tableWrapper {
+            overflow-x: auto;
+            max-width: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            background-color: #334155; /* Fundo da tabela escuro */
+        }
+        #dataTable {
+            min-width: 1100px; 
+            width: 100%; 
+            border-collapse: collapse;
+            font-family: 'Consolas', 'Courier New', monospace; 
+            font-size: 0.85em; 
+            color: #f8fafc; /* Cor do texto da tabela */
+        }
+        #dataTable th, #dataTable td {
+            border: 1px solid #475569; /* Borda escura */
+            padding: 8px; 
+            text-align: left;
+            white-space: nowrap; 
+        }
+        #dataTable th {
+            background-color: #1f2937; /* Fundo do cabeçalho mais escuro */
+            color: #94a3b8; /* Cor do texto do cabeçalho */
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            padding-top: 10px; 
+            padding-bottom: 10px; 
+        }
+        #dataTable tbody tr:nth-child(even) {
+            background-color: #2c384a; /* Linhas pares mais escuras */
+        }
+        .text-right {
+            text-align: right !important;
+        }
+        .filter-input {
+            padding: 4px 3px; 
+            font-size: 0.75em; 
+            background-color: #475569; /* Fundo do filtro escuro */
+            color: #f8fafc; /* Texto do filtro claro */
+            border: 1px solid #64748b;
+        }
+        #filterRow th {
+            background-color: #334155; /* Fundo da linha de filtro */
+        }
+        /* Global Chart.js Font Color Override (necessário para o tema Dark) */
+        body {
+            /* Adiciona uma cor padrão para o texto dos gráficos */
+            --chart-font-color: #f8fafc;
+        }
+        
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+</head>
+<body>
+    
+    <div id="loadingSpinner">
+        <div class="spinner-icon"></div>
+    </div>
+    <div class="main-header">
+        <h1>Dashboard de Análise de Faturamento - Por Cliente</h1>
+        <div class="header-controls-wrapper">
+             <div class="functions-dropdown" id="functionsDropdown">
+                <button class="dropdown-toggle-button" onclick="toggleDropdown()">Funções ▼</button>
+                <div class="dropdown-content">
+                    <div class="file-upload-wrapper">
+                        <label for="fileInput" class="custom-file-button">
+                            Importar Dados
+                        </label>
+                        <input type="file" id="fileInput" accept=".xlsx, .xls">
+                    </div>
+                    <button class="clear-data-button" onclick="clearLocalData()">Limpar Banco</button>
+                </div>
+             </div>
+             <a href="processos.html" class="back-button" style="margin-left: 0;">Voltar</a>
+        </div>
+    </div>
+    
+    <div class="controls-row">
+        </div>
+
+    <hr>
+    
+    <div id="periodoAnalizado">Período Analisado: N/A</div>
+
+    <div class="summary-wrapper">
+        <div class="summary-card" id="cardValorTotal"> 
+            <button id="toggleValorBtn" onclick="toggleValorTotal()">👁️</button>
+            <div class="summary-title">Valor Total Faturado</div>
+            <div class="summary-value" id="totalValor">R$ 0,00</div>
+        </div>
+        
+        <div class="summary-panels">
+            <div class="summary-card peso">
+                <div class="summary-title">Peso Total Faturado</div>
+                <div class="summary-value" id="totalPeso">0,00 kg</div>
+            </div>
+            <div class="summary-card medio">
+                <div class="summary-title">Peso Médio por Peça</div>
+                <div class="summary-value" id="pesoMedio">0,00 kg</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="charts-container">
+        <div class="chart-panel">
+            <h2>Clientes com Mais Peso Faturado (Top 10)</h2>
+            <div class="chartContainer">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-panel">
+            <h2>Peso Total Faturado por Mês</h2>
+            <div class="chartContainer">
+                <canvas id="revenueChart"></canvas> 
+            </div>
+        </div>
+        
+        <div class="chart-panel">
+            <h2>Top 5 Materiais por Peso (kg)</h2>
+            <div class="chartContainer">
+                <canvas id="materialPieChart"></canvas> 
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-controls-row">
+        <h3>Filtro por Período:</h3>
+        <input type="date" id="filterFromDate" onchange="applyDateRangeFilter()" title="Filtrar De (Data Inicial)">
+        <input type="date" id="filterToDate" onchange="applyDateRangeFilter()" title="Filtrar Até (Data Final)">
+        <button class="clear-filter-button" onclick="clearAllFilters()">Limpar Todos os Filtros</button>
+    </div>
+    <h2>Dados Importados</h2>
+    
+    <div id="tableWrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th data-col-index="0">DATA</th>
+                    <th data-col-index="1">CÓD. CLIENTE</th>
+                    <th data-col-index="2">CLIENTE</th>
+                    <th data-col-index="3">CÓDIGO</th>
+                    <th data-col-index="4">DESCRIÇÃO</th>
+                    <th data-col-index="5" class="text-right">QUANT.</th>
+                    <th data-col-index="6" class="text-right">Preço (Un)</th>
+                    <th data-col-index="7">MATERIAL</th>
+                    <th data-col-index="8" class="text-right">Peso Un</th>
+                    <th data-col-index="9" class="text-right">Peso Total</th>
+                    <th data-col-index="10" class="text-right col-valor-total-header">R$ Total</th> 
+                </tr>
+                <tr id="filterRow">
+                    <th><input type="text" class="filter-input" data-column="0" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por DATA"></th>
+                    <th><input type="text" class="filter-input" data-column="1" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por CÓD. CLIENTE"></th>
+                    <th><input type="text" class="filter-input" data-column="2" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por CLIENTE"></th>
+                    <th><input type="text" class="filter-input" data-column="3" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por CÓDIGO"></th>
+                    <th><input type="text" class="filter-input" data-column="4" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por DESCRIÇÃO"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="5" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por QUANT."></th>
+                    <th><input type="text" class="filter-input text-right" data-column="6" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por Preço (Un)"></th>
+                    <th><input type="text" class="filter-input" data-column="7" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por MATERIAL"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="8" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por Peso Un"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="9" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por Peso Total"></th>
+                    <th class="col-valor-total-filter"><input type="text" class="filter-input text-right" data-column="10" onkeyup="filterTable()" placeholder="Filtro" title="Filtrar por R$ Total"></th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chamada para carregar os dados do Servidor
+            loadServerData(); 
+            
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('functionsDropdown');
+                const isClickInside = dropdown.contains(event.target);
+                if (!isClickInside) {
+                    dropdown.classList.remove('open');
+                }
+            });
+             
+            // ATUALIZAÇÃO PARA TEMA DARK: Configuração global para o Chart.js
+            Chart.defaults.color = '#f8fafc'; // Cor da fonte padrão para todos os gráficos (branco/claro)
+            Chart.defaults.borderColor = '#475569'; // Cor da borda padrão para linhas e eixos (cinza escuro)
+
+        });
+
+        // =========================================================
+        // FUNÇÕES DO SPINNER E BLOQUEIO DE TELA
+        // =========================================================
+        function showSpinner() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                spinner.style.display = 'flex';
+                // Bloqueia o scroll e o clique em elementos abaixo do spinner
+                document.body.classList.add('no-scroll');
+            }
+        }
+
+        function hideSpinner() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+                // Desbloqueia o scroll
+                document.body.classList.remove('no-scroll');
+            }
+        }
+        // =========================================================
+
+
+        function toggleDropdown() {
+             document.getElementById('functionsDropdown').classList.toggle('open');
+        }
+
+
+        let myWeightChart; 
+        let myWeightByMonthChart; 
+        let myMaterialPieChart; 
+        
+        const TOP_CLIENTS_COUNT = 10; 
+        const TOP_MATERIALS_COUNT = 5; 
+        
+        const COL_INDEX = {
+            DATA: 0, 
+            CLIENTE: 2, 
+            QUANT: 5, 
+            PRECO_UN: 6, 
+            MATERIAL: 7, 
+            PESO_UN: 8, 
+            PESO_TOTAL: 9, 
+            VALOR_TOTAL: 10 
+        };
+        
+        let globalDataArray = [];
+        let rawTotalValor = 0; 
+        let activeMonthFilter = null; 
+        let activeFromDate = null; 
+        let activeToDate = null; 
+        
+        // CHAVE DO LOCALSTORAGE - MANTIDA PARA A FUNÇÃO CLEAR, MAS NÃO É USADA PARA CARREGAR/SALVAR
+        const STORAGE_KEY = 'dashboard_excel_data_clientes'; 
+        
+        // Cores ajustadas para funcionar melhor no tema Dark
+        const PIE_COLORS = [
+            '#3b82f6', /* Azul Claro */
+            '#10b981', /* Verde Esmeralda */
+            '#f59e0b', /* Amarelo Laranja */
+            '#f87171', /* Vermelho Claro */
+            '#a78bfa', /* Roxo Lavanda */
+            '#67e8f9', /* Ciano Claro */
+            '#f472b6', /* Rosa */
+        ];
+
+        // Helper para formatar data para input HTML (YYYY-MM-DD)
+        function formatDateToInput(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+
+        // --- Funções de Formatação ---
+        function formatCurrency(value) {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatNumber(value, decimalPlaces = 2, suffix = '') {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', { minimumFractionDigits: decimalPlaces, maximumFractionDigits: decimalPlaces }) + suffix;
+        }
+
+        function excelSerialDateToJSDate(serial) {
+            // Excel serial date adjustment (dias desde 1900-01-01)
+            const utc_days = Math.floor(serial - 25569); 
+            // 86400000 = milissegundos em um dia
+            const date_info = new Date(utc_days * 86400000); 
+            return date_info;
+        }
+        
+        function getDateObject(cellData) {
+            let dateObj;
+            
+            // 1. Caso: Número Serial do Excel (provavelmente importado do Excel)
+            if (typeof cellData === 'number' && cellData > 1) {
+                dateObj = excelSerialDateToJSDate(cellData);
+            // 2. Caso: String no formato DD/MM/YYYY (comum no Brasil)
+            } else if (typeof cellData === 'string' && cellData.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                const parts = cellData.split('/');
+                // Converte para MM/DD/YYYY para compatibilidade com new Date()
+                const rearrangedDate = `${parts[1]}/${parts[0]}/${parts[2]}`; 
+                dateObj = new Date(rearrangedDate);
+            // 3. Caso: Outro formato de string ou objeto Date nativo
+            } else {
+                dateObj = new Date(cellData);
+            }
+
+            if (!isNaN(dateObj.getTime())) {
+                // Zera o horário para comparação de data pura
+                dateObj.setHours(0, 0, 0, 0);
+            }
+
+            return dateObj;
+        }
+        
+        function toggleValorTotal() {
+            const card = document.getElementById('cardValorTotal');
+            const valueElement = document.getElementById('totalValor');
+            const button = document.getElementById('toggleValorBtn');
+            
+            const isVisible = card.getAttribute('data-visible') === 'true';
+            
+            const newState = !isVisible;
+            card.setAttribute('data-visible', newState);
+            
+            const style = newState ? 'table-cell' : 'none'; 
+
+            if (newState) {
+                valueElement.textContent = formatCurrency(rawTotalValor);
+                button.innerHTML = '👁️'; 
+            } else {
+                valueElement.textContent = 'R$ -'; 
+                button.innerHTML = '🔒'; 
+            }
+
+            const headerCell = document.querySelector('.col-valor-total-header');
+            if(headerCell) headerCell.style.display = style;
+            
+            const filterCell = document.querySelector('.col-valor-total-filter');
+            if(filterCell) filterCell.style.display = style;
+
+            const tableBody = document.querySelector('#dataTable tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cell = rows[i].cells[COL_INDEX.VALOR_TOTAL];
+                if (cell) {
+                    cell.style.display = style;
+                }
+            }
+        }
+
+
+        // --- Funções de Servidor (Banco de Dados) ---
+        
+        async function loadServerData() {
+            showSpinner();
+            try {
+                const response = await fetch('/api/faturamento-clientes-detalhado');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.length > 1) { 
+                    globalDataArray = data;
+                    console.log('Dados carregados do Servidor (DB).');
+                    
+                    displayTable(globalDataArray);
+                    updatePeriodAnalyzed(globalDataArray);
+                    
+                    // --- Define o filtro inicial para os últimos 30 dias ---
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    const thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    
+                    activeFromDate = thirtyDaysAgo;
+                    const tempToDate = new Date(today); 
+                    tempToDate.setDate(today.getDate() + 1);
+                    activeToDate = tempToDate;
+                    
+                    document.getElementById('filterFromDate').value = formatDateToInput(thirtyDaysAgo);
+                    document.getElementById('filterToDate').value = formatDateToInput(today); 
+                    
+                    activeMonthFilter = null;
+                    clearColumnFilters();
+                    
+                    filterTable(); 
+                    
+                    document.getElementById('cardValorTotal').setAttribute('data-visible', 'true'); 
+                    toggleValorTotal(); 
+                } else {
+                    console.log('Nenhum dado encontrado no Servidor.');
+                    clearDateRangeFilters();
+                    document.getElementById('cardValorTotal').setAttribute('data-visible', 'true'); 
+                    toggleValorTotal(); 
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do Servidor:', error);
+                alert('Erro ao carregar dados do servidor. Verifique se o servidor Python está rodando.');
+            } finally {
+                hideSpinner();
+            }
+        }
+        
+        async function saveLocalData(dataArray) {
+            showSpinner();
+            try {
+                // Envia os dados para o endpoint do servidor Python
+                const response = await fetch('/api/faturamento-clientes-detalhado', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataArray)
+                });
+                
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Dados de faturamento importados e salvos com sucesso no Banco de Dados!');
+                    
+                    // Após salvar, atualiza a tela com a lógica de filtros
+                    globalDataArray = dataArray;
+                    displayTable(globalDataArray);
+                    updatePeriodAnalyzed(globalDataArray);
+                    
+                    // --- Define o filtro para os últimos 30 dias após a importação ---
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    const thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    
+                    activeFromDate = thirtyDaysAgo;
+                    const tempToDate = new Date(today); 
+                    tempToDate.setDate(today.getDate() + 1);
+                    activeToDate = tempToDate;
+                    
+                    document.getElementById('filterFromDate').value = formatDateToInput(thirtyDaysAgo);
+                    document.getElementById('filterToDate').value = formatDateToInput(today); 
+                    
+                    activeMonthFilter = null;
+                    clearColumnFilters();
+                    filterTable(); 
+                    
+                    document.getElementById('cardValorTotal').setAttribute('data-visible', 'true');
+                    toggleValorTotal(); 
+                    document.getElementById('functionsDropdown').classList.remove('open');
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao salvar os dados no servidor.');
+                }
+            } catch (error) {
+                console.error("Erro ao salvar dados no Servidor:", error);
+                alert("Erro ao salvar dados no Servidor: " + error.message);
+            } finally {
+                hideSpinner();
+            }
+        }
+        
+        function clearLocalData() {
+            if (confirm('Tem certeza que deseja limpar **TODOS** os dados de Faturamento por Cliente salvos no Banco de Dados (Limpar Banco)? Esta ação é irreversível.')) {
+                
+                showSpinner();
+                // O Endpoint de salvar com array vazio tem o mesmo efeito de limpar a tabela.
+                fetch('/api/faturamento-clientes-detalhado', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify([])
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                         alert('Dados de faturamento limpos com sucesso! A página será recarregada.');
+                         window.location.reload(); 
+                    } else {
+                         alert('Erro ao limpar dados do banco de dados: ' + (result.error || 'Erro desconhecido'));
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao limpar dados:", error);
+                    alert('Erro de comunicação ao tentar limpar os dados.');
+                })
+                .finally(() => {
+                    hideSpinner();
+                });
+            }
+        }
+
+
+        // --- Funções de Controle de Filtros ---
+        function clearColumnFilters() {
+            const filterInputs = document.querySelectorAll('.filter-input');
+            filterInputs.forEach(input => {
+                input.value = '';
+            });
+        }
+        
+        function clearDateRangeFilters() {
+            activeFromDate = null;
+            activeToDate = null;
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+        }
+        
+        function clearAllFilters() {
+            showSpinner(); 
+
+            activeMonthFilter = null;
+            clearDateRangeFilters();
+            clearColumnFilters();
+            
+            setTimeout(() => {
+                filterTable(); 
+                
+                if (globalDataArray.length > 0) {
+                    displayTable(globalDataArray); 
+                    filterTable();
+                }
+
+                hideSpinner(); 
+            }, 0);
+        }
+
+        function applyDateRangeFilter() {
+            const fromDateInput = document.getElementById('filterFromDate').value;
+            const toDateInput = document.getElementById('filterToDate').value;
+
+            if (fromDateInput) {
+                activeFromDate = new Date(fromDateInput + 'T00:00:00'); 
+            } else {
+                activeFromDate = null;
+            }
+
+            if (toDateInput) {
+                const toDateObj = new Date(toDateInput + 'T00:00:00');
+                toDateObj.setDate(toDateObj.getDate() + 1); 
+                activeToDate = toDateObj;
+            } else {
+                activeToDate = null;
+            }
+            
+            activeMonthFilter = null;
+            clearColumnFilters(); 
+            
+            filterTable();
+        }
+
+        
+        // --- Funções de Leitura de Arquivo ---
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showSpinner(); 
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    // raw: true garante que os números de data do Excel sejam mantidos como números
+                    const workbook = XLSX.read(data, { type: 'array', raw: true }); 
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // header: 1 garante que o cabeçalho seja incluído como a primeira linha do array.
+                    const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
+                    
+                    // Salva os dados no Servidor/Banco de Dados
+                    saveLocalData(excelData);
+                    
+                } catch (error) {
+                    console.error("Erro durante a importação do arquivo:", error);
+                    alert("Erro ao processar o arquivo Excel. Verifique se o formato está correto.");
+                } finally {
+                    document.getElementById('fileInput').value = ''; 
+                    // O hideSpinner é chamado em saveLocalData.
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Funções de Análise, Tabela e Gráficos (Mantidas) ---
+        function updatePeriodAnalyzed(dataArray) {
+            const dataRows = dataArray.slice(1);
+            if (dataRows.length === 0) {
+                 document.getElementById('periodoAnalizado').textContent = 'Período Analisado: N/A';
+                 return;
+            }
+            
+            let minTimestamp = Infinity;
+            let maxTimestamp = -Infinity;
+
+            dataRows.forEach(row => {
+                if (row.length > COL_INDEX.DATA) {
+                    const dateObj = getDateObject(row[COL_INDEX.DATA]);
+                    if (!isNaN(dateObj.getTime())) {
+                        const timestamp = dateObj.getTime();
+                        if (timestamp < minTimestamp) {
+                            minTimestamp = timestamp;
+                        }
+                        if (timestamp > maxTimestamp) {
+                            maxTimestamp = timestamp;
+                        }
+                    }
+                }
+            });
+
+            if (minTimestamp === Infinity || maxTimestamp === -Infinity) {
+                document.getElementById('periodoAnalizado').textContent = 'Período Analisado: Datas inválidas encontradas.';
+                return;
+            }
+
+            const minDate = new Date(minTimestamp).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const maxDate = new Date(maxTimestamp).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+            document.getElementById('periodoAnalizado').textContent = `Período Analisado: ${minDate} até ${maxDate}`;
+        }
+
+        function displayTable(dataArray) {
+            const tableBody = document.querySelector('#dataTable tbody');
+            tableBody.innerHTML = '';
+            
+            if (dataArray.length < 2) { 
+                return;
+            }
+
+            // Cabeçalho do HTML: 
+            // ["DATA", "CÓD. CLIENTE", "CLIENTE", "CÓDIGO", "DESCRIÇÃO", "QUANT.", "Preço (Un)", "MATERIAL", "Peso Un", "Peso Total", "R$ Total"]
+            const EXCEL_HEADERS = ["DATA", "CÓD. CLIENTE", "CLIENTE", "CÓDIGO", "DESCRIÇÃO", "QUANT.", "PREÇO UNITARIO", "MATERIAL", "PESO LIQUIDO UN", "PESO LIQUIDO TOTAL", "R$ TOTAL"];
+
+            const dataRows = dataArray.slice(1);
+
+            dataRows.forEach(row => {
+                // Garante que a linha tem dados suficientes
+                if (row.length < EXCEL_HEADERS.length) return; 
+
+                const newRow = tableBody.insertRow();
+                let searchData = []; 
+                let rawPeso = 0;
+                let rawValor = 0;
+                let rawQuant = 0;
+                let rawDateValue = ''; 
+                let rawMaterial = ''; 
+
+                for (let i = 0; i < EXCEL_HEADERS.length; i++) {
+                    let cellData = row[i] !== undefined ? row[i] : '';
+                    const newCell = newRow.insertCell();
+                    
+                    // Tenta obter valor numérico, usando ponto como separador decimal para o parser JS
+                    let numericValue = parseFloat(String(cellData).replace(',', '.')) || 0; 
+                    let formattedText = String(cellData);
+                    
+                    if (i === COL_INDEX.DATA) {
+                        rawDateValue = cellData;
+                        const dateObj = getDateObject(cellData);
+                        
+                        if (!isNaN(dateObj.getTime())) {
+                            formattedText = dateObj.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        } else {
+                            formattedText = String(cellData); 
+                        }
+                    } else if (i === COL_INDEX.MATERIAL) {
+                         rawMaterial = String(cellData || '').trim();
+                         formattedText = rawMaterial;
+                    } else if (i === COL_INDEX.QUANT || i === COL_INDEX.PESO_TOTAL || i === COL_INDEX.VALOR_TOTAL || i === COL_INDEX.PRECO_UN || i === COL_INDEX.PESO_UN) {
+                        
+                        newCell.classList.add('text-right');
+                        
+                        if (i === COL_INDEX.QUANT) {
+                            formattedText = formatNumber(numericValue, 0);
+                            rawQuant = numericValue;
+                        } else if (i === COL_INDEX.PRECO_UN) { 
+                            formattedText = formatCurrency(numericValue);
+                        } else if (i === COL_INDEX.VALOR_TOTAL) {
+                            formattedText = formatCurrency(numericValue);
+                            rawValor = numericValue;
+                            newCell.classList.add('col-valor-total-cell'); 
+                        } else if (i === COL_INDEX.PESO_TOTAL) {
+                            formattedText = formatNumber(numericValue, 2, ' kg');
+                            rawPeso = numericValue;
+                        } else if (i === COL_INDEX.PESO_UN) { 
+                            formattedText = formatNumber(numericValue, 2, ' kg');
+                        }
+                    } 
+                    
+                    newCell.textContent = formattedText;
+                    // Adiciona o texto formatado para a pesquisa
+                    searchData.push(formattedText.toLowerCase().replace('r$', '').trim()); 
+                }
+                
+                newRow.setAttribute('data-search-data', JSON.stringify(searchData));
+                newRow.setAttribute('data-raw-peso', rawPeso);
+                newRow.setAttribute('data-raw-quant', rawQuant);
+                newRow.setAttribute('data-raw-valor', rawValor);
+                // Assume que COL_INDEX.CLIENTE (índice 2) está presente no row
+                newRow.setAttribute('data-raw-cliente', String(row[COL_INDEX.CLIENTE] || '').trim());
+                newRow.setAttribute('data-raw-date', rawDateValue); 
+                newRow.setAttribute('data-raw-material', rawMaterial); 
+            });
+        }
+        
+        function updateSummaryPanels(peso, valor, quantidade) {
+            const pesoMedio = quantidade > 0 ? (peso / quantidade) : 0;
+            
+            document.getElementById('totalPeso').textContent = formatNumber(peso, 2, ' kg');
+            document.getElementById('pesoMedio').textContent = formatNumber(pesoMedio, 2, ' kg');
+            
+            rawTotalValor = valor; 
+            
+            if (document.getElementById('cardValorTotal').getAttribute('data-visible') === 'true') {
+                 document.getElementById('totalValor').textContent = formatCurrency(rawTotalValor);
+            }
+        }
+
+        function filterTable() {
+            const filterInputs = document.querySelectorAll('.filter-input');
+            const tableBody = document.querySelector('#dataTable tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            const activeFilters = Array.from(filterInputs)
+                .map(input => ({
+                    index: parseInt(input.getAttribute('data-column')),
+                    term: input.value.toLowerCase().trim()
+                }))
+                .filter(f => f.term.length > 0);
+
+            let filteredTotalPeso = 0;
+            let filteredTotalValor = 0;
+            let filteredTotalQuant = 0;
+            let visibleRowsDataForCharts = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const rowSearchData = JSON.parse(row.getAttribute('data-search-data') || '[]');
+                const rawDateValue = row.getAttribute('data-raw-date');
+                
+                let matchesAllFilters = true;
+
+                if (activeFilters.length > 0) {
+                    matchesAllFilters = activeFilters.every(filter => {
+                        const searchContent = rowSearchData[filter.index] || '';
+                        return searchContent.includes(filter.term);
+                    });
+                }
+                
+                // Filtro por Período de Data
+                if (matchesAllFilters && (activeFromDate || activeToDate)) {
+                     const rowDateObj = getDateObject(rawDateValue); 
+                     
+                     if (isNaN(rowDateObj.getTime())) { 
+                         matchesAllFilters = false; 
+                     } else {
+                         const rowTimestamp = rowDateObj.getTime();
+                         
+                         if (activeFromDate && rowTimestamp < activeFromDate.getTime()) {
+                             matchesAllFilters = false;
+                         }
+                         // Usa ">=" pois activeToDate já está somado +1 dia no applyDateRangeFilter
+                         if (activeToDate && rowTimestamp >= activeToDate.getTime()) { 
+                             matchesAllFilters = false;
+                         }
+                     }
+                }
+
+                // Filtro por Mês do Gráfico (clique na barra)
+                if (matchesAllFilters && activeMonthFilter) {
+                    const dateObj = getDateObject(rawDateValue);
+                    
+                    if (!isNaN(dateObj.getTime())) {
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const monthKey = `${year}-${month}`; 
+                        
+                        if (monthKey !== activeMonthFilter) {
+                            matchesAllFilters = false;
+                        }
+                    } else {
+                        matchesAllFilters = false; 
+                    }
+                }
+
+                if (matchesAllFilters) {
+                    row.style.display = ""; 
+                    
+                    const rawPeso = parseFloat(row.getAttribute('data-raw-peso'));
+                    const rawValor = parseFloat(row.getAttribute('data-raw-valor'));
+                    const rawQuant = parseFloat(row.getAttribute('data-raw-quant'));
+                    const rawMaterial = row.getAttribute('data-raw-material'); 
+                    
+                    filteredTotalPeso += rawPeso;
+                    filteredTotalValor += rawValor;
+                    filteredTotalQuant += rawQuant;
+                    
+                    visibleRowsDataForCharts.push({
+                        cliente: row.getAttribute('data-raw-cliente'),
+                        peso: rawPeso,
+                        valor: rawValor,
+                        date: rawDateValue, 
+                        material: rawMaterial 
+                    });
+
+                } else {
+                    row.style.display = "none";
+                }
+            }
+            
+            updateSummaryPanels(filteredTotalPeso, filteredTotalValor, filteredTotalQuant);
+            generateWeightChart(visibleRowsDataForCharts); 
+            generateWeightByMonthChart(visibleRowsDataForCharts); 
+            generateMaterialPieChart(visibleRowsDataForCharts); 
+        }
+        
+        function generateWeightChart(dataArray) { 
+            if (!dataArray || dataArray.length === 0) {
+                if (myWeightChart) { myWeightChart.destroy(); myWeightChart = null; }
+                return;
+            }
+
+            const clientWeightMap = new Map();
+            let totalWeight = 0; 
+            
+            dataArray.forEach(item => {
+                if (!item.cliente || item.peso === undefined || isNaN(item.peso)) return;
+
+                const clientName = item.cliente;
+                const rawWeight = item.peso; 
+
+                const currentWeight = clientWeightMap.get(clientName) || 0;
+                clientWeightMap.set(clientName, currentWeight + rawWeight);
+                totalWeight += rawWeight;
+            });
+
+            const sortedClients = Array.from(clientWeightMap.entries())
+                .map(([cliente, peso]) => ({ cliente, peso }))
+                .sort((a, b) => b.peso - a.peso) 
+                .slice(0, TOP_CLIENTS_COUNT);
+
+            let cumulativeWeight = 0;
+            const cumulativeData = sortedClients.map(c => {
+                cumulativeWeight += c.peso;
+                return totalWeight > 0 ? (cumulativeWeight / totalWeight) * 100 : 0;
+            });
+
+            const labels = sortedClients.map(c => c.cliente.split(' ')[0]);
+            const fullLabels = sortedClients.map(c => c.cliente);
+            const data = sortedClients.map(c => parseFloat(c.peso.toFixed(2))); 
+
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            
+            if (myWeightChart) {
+                myWeightChart.destroy();
+            }
+
+            myWeightChart = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labels, 
+                    datasets: [
+                        {
+                            type: 'line', 
+                            label: '', 
+                            data: cumulativeData,
+                            backgroundColor: PIE_COLORS[1], 
+                            borderColor: PIE_COLORS[1],
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1', 
+                            pointRadius: 4,
+                            tension: 0.3, 
+                            order: 0 
+                        },
+                        {
+                            type: 'bar', 
+                            label: '', 
+                            data: data,
+                            backgroundColor: PIE_COLORS[0], 
+                            borderColor: PIE_COLORS[0],
+                            borderWidth: 1,
+                            yAxisID: 'y0', 
+                            order: 1 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    indexAxis: 'x', 
+                    scales: {
+                        y0: { 
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Peso Faturado (kg)', color: Chart.defaults.color }, 
+                            ticks: { callback: function(value) { return formatNumber(value, 0, ' kg'); }, color: Chart.defaults.color }
+                        },
+                        y1: { 
+                            type: 'linear',
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { drawOnChartArea: false }, 
+                            title: { display: true, text: 'Acumulado (%)', color: Chart.defaults.color }, 
+                            ticks: { callback: function(value) { return value + ' %'; }, color: Chart.defaults.color }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }, 
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) { return fullLabels[context[0].dataIndex]; },
+                                label: function(context) {
+                                    let label = context.datasetIndex === 0 ? 'Acumulado: ' : 'Peso: ';
+                                    if (context.dataset.type === 'line') {
+                                        const value = context.parsed.y;
+                                        return label + value.toFixed(1) + ' %';
+                                    } else {
+                                        return label + formatNumber(context.parsed.y, 2, ' kg');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateWeightByMonthChart(dataArray) { 
+            if (!dataArray || dataArray.length === 0) {
+                if (myWeightByMonthChart) { myWeightByMonthChart.destroy(); myWeightByMonthChart = null; }
+                return;
+            }
+
+            const weightMap = new Map();
+            
+            dataArray.forEach(item => {
+                if (!item.date || item.peso === undefined || isNaN(item.peso)) return;
+
+                const dateObj = getDateObject(item.date);
+                
+                if (isNaN(dateObj.getTime())) return;
+
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const monthKey = `${year}-${month}`;
+
+                const rawWeight = item.peso;
+                const currentWeight = weightMap.get(monthKey) || 0;
+                weightMap.set(monthKey, currentWeight + rawWeight);
+            });
+            
+            const sortedKeys = Array.from(weightMap.keys()).sort();
+            
+            const labels = sortedKeys.map(key => {
+                const [year, month] = key.split('-');
+                return `${month}/${year}`; 
+            });
+            
+            const data = sortedKeys.map(key => parseFloat(weightMap.get(key).toFixed(2)));
+
+            const backgroundColors = sortedKeys.map(key => 
+                key === activeMonthFilter ? PIE_COLORS[0] : PIE_COLORS[2] 
+            );
+
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (myWeightByMonthChart) {
+                myWeightByMonthChart.destroy();
+            }
+
+            myWeightByMonthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels, 
+                    datasets: [{
+                        label: 'Peso Total (kg)',
+                        data: data,
+                        backgroundColor: backgroundColors, 
+                        borderColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Peso Faturado (kg)', color: Chart.defaults.color },
+                            ticks: { 
+                                callback: function(value) { return formatNumber(value, 0, ' kg'); },
+                                color: Chart.defaults.color
+                            }
+                        },
+                        x: {
+                            title: { display: true, text: 'Mês/Ano', color: Chart.defaults.color },
+                            ticks: {
+                                color: Chart.defaults.color
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label + ': ';
+                                    return label + formatNumber(context.parsed.y, 2, ' kg');
+                                }
+                            }
+                        },
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const monthKey = sortedKeys[clickedIndex]; 
+                            
+                            if (activeMonthFilter === monthKey) {
+                                activeMonthFilter = null;
+                            } else {
+                                activeMonthFilter = monthKey;
+                            }
+                            
+                            clearDateRangeFilters();
+                            clearColumnFilters();
+                            
+                            filterTable(); 
+                            generateWeightByMonthChart(dataArray); 
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateMaterialPieChart(dataArray) { 
+             if (!dataArray || dataArray.length === 0) {
+                if (myMaterialPieChart) { myMaterialPieChart.destroy(); myMaterialPieChart = null; }
+                return;
+            }
+
+            const materialWeightMap = new Map();
+            let totalWeight = 0;
+            
+            dataArray.forEach(item => {
+                if (!item.material || item.peso === undefined || isNaN(item.peso)) return;
+
+                const materialName = item.material.toUpperCase(); 
+                const rawWeight = item.peso; 
+
+                const currentWeight = materialWeightMap.get(materialName) || 0;
+                materialWeightMap.set(materialName, currentWeight + rawWeight);
+                totalWeight += rawWeight;
+            });
+
+            let sortedMaterials = Array.from(materialWeightMap.entries())
+                .map(([material, peso]) => ({ material, peso }))
+                .sort((a, b) => b.peso - a.peso);
+            
+            const topMaterials = sortedMaterials.slice(0, TOP_MATERIALS_COUNT);
+            let otherWeight = 0;
+            
+            if (sortedMaterials.length > TOP_MATERIALS_COUNT) {
+                 otherWeight = sortedMaterials.slice(TOP_MATERIALS_COUNT).reduce((sum, item) => sum + item.peso, 0);
+                 topMaterials.push({ material: 'OUTROS', peso: otherWeight });
+            }
+
+            const labels = topMaterials.map(c => c.material);
+            const data = topMaterials.map(c => parseFloat(c.peso.toFixed(2))); 
+
+            const ctx = document.getElementById('materialPieChart').getContext('2d');
+            
+            if (myMaterialPieChart) {
+                myMaterialPieChart.destroy();
+            }
+
+            myMaterialPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels, 
+                    datasets: [{
+                        data: data,
+                        backgroundColor: PIE_COLORS, 
+                        borderColor: '#1e293b', /* Borda escura para separar no fundo escuro */
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom', 
+                            labels: {
+                                padding: 10,
+                                color: Chart.defaults.color
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = totalWeight > 0 ? ((value / totalWeight) * 100).toFixed(1) : 0;
+
+                                    return `${label}: ${formatNumber(value, 2, ' kg')} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Detalhado de Faturamento - Tema Dark</title>
+    <style>
+        /* ========================================================= */
+        /* ESTILOS GERAIS E LAYOUT - DARK THEME */
+        /* ========================================================= */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px; 
+            background-color: #1e293b; /* Fundo Escuro Principal (Slate 800) */
+            color: #f8fafc; /* Cor do Texto Principal (Slate 50) */
+            font-size: 14px; 
+        }
+        
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #334155; /* Borda mais escura */
+            padding-bottom: 8px; 
+        }
+
+        h1 {
+            color: #93c5fd; /* Azul Claro para Destaque */
+            margin: 0; 
+            padding: 0;
+            font-size: 1.8em; 
+        }
+
+        h2 {
+            color: #e2e8f0; /* Azul Acinzentado Claro */
+            margin-top: 15px; 
+            margin-bottom: 12px; 
+            font-size: 1.4em;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid #475569; /* Linha divisória escura */
+            margin: 15px 0; 
+        }
+
+        /* ESTILOS DE BOTÕES DE AÇÃO - DARK THEME */
+
+        /* Cor de destaque (vermelho) mantida, mas ajustada para fundo escuro */
+        .back-button, .dropdown-toggle-button {
+            background-color: #f87171; /* Vermelho Mais Claro */
+            color: #1f2937; /* Texto Escuro */
+            padding: 8px 15px; 
+            border: none;
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3); /* Sombra mais escura */
+            font-size: 0.9em;
+            text-decoration: none; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px; 
+            box-sizing: border-box;
+        }
+        .back-button:hover {
+            background-color: #ef4444; /* Vermelho Padrão no Hover */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+        }
+        
+        .dropdown-toggle-button {
+             background-color: #f87171; 
+             margin-right: 10px;
+        }
+        .dropdown-toggle-button:hover {
+             background-color: #ef4444; 
+        }
+
+        /* ========================================================= */
+        /* ESTILO DO DROPDOWN DE FUNÇÕES - DARK THEME */
+        /* ========================================================= */
+        .header-controls-wrapper {
+            display: flex; 
+            align-items: center;
+        }
+        
+        .functions-dropdown {
+            position: relative;
+            display: inline-block;
+            height: 34px; 
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0; 
+            top: 100%; 
+            background-color: #334155; /* Fundo do Dropdown Escuro */
+            min-width: 180px;
+            box-shadow: 0 8px 16px 0px rgba(0,0,0,0.5);
+            z-index: 10;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 5px; 
+        }
+
+        .functions-dropdown.open .dropdown-content {
+            display: flex; 
+            flex-direction: column;
+            gap: 8px; 
+        }
+        
+        .file-upload-wrapper, .clear-data-button {
+            position: relative;
+            display: inline-block;
+            width: 100%; 
+        }
+        
+        /* Botão Importar Dados (Azul Escuro) */
+        .custom-file-button, .clear-data-button {
+            background-color: #3b82f6; /* Azul Claro (Destaque Primário) */
+            color: white;
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            display: block; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+            font-size: 1em;
+            border: none;
+            text-align: center;
+            white-space: nowrap; 
+        }
+        .custom-file-button:hover {
+            background-color: #2563eb; 
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Botão Limpar Dados (Roxo/Magenta Escuro) */
+        .clear-data-button {
+            background-color: #db2777; /* Rosa Escuro */
+            padding: 10px 15px;
+        }
+        .clear-data-button:hover {
+            background-color: #be185d;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        #fileInput {
+            position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+
+        /* ========================================================= */
+        /* ESTILO DO SPINNER DE CARREGAMENTO - DARK THEME */
+        /* ========================================================= */
+        #loadingSpinner {
+            display: none; 
+            position: fixed;
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.8); /* Fundo semi-transparente escuro */
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .spinner-icon {
+            border: 8px solid #334155; /* Borda clara */
+            border-top: 8px solid #93c5fd; /* Borda de destaque */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+
+        /* ========================================================= */
+        /* ESTILO PARA A LINHA DE FILTROS (PERÍODO) - DARK THEME */
+        /* ========================================================= */
+        .filter-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: #334155; /* Fundo do filtro escuro */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            flex-wrap: wrap; 
+        }
+        .filter-controls-row h3 {
+            margin: 0;
+            font-size: 1em;
+            font-weight: 600;
+            color: #cbd5e1; /* Texto claro */
+        }
+        .filter-controls-row input[type="date"],
+        .filter-controls-row input[type="number"] {
+            padding: 6px 10px;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background-color: #475569; /* Fundo do input escuro */
+            color: #f8fafc; /* Texto do input claro */
+        }
+        .period-control-button, #toggleServiceButton {
+            background-color: #64748b; /* Botão de controle cinza escuro */
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+        }
+        .period-control-button:hover, #toggleServiceButton:hover {
+            background-color: #475569;
+        }
+        
+        /* Estilo para o botão "Ocultar Serviços" quando ativo */
+        #toggleServiceButton.active {
+            background-color: #fcd34d; /* Amarelo Claro de Alerta */
+            color: #1f2937; /* Texto escuro no botão de alerta */
+        }
+        #toggleServiceButton.active:hover {
+            background-color: #fbbf24; 
+        }
+
+        .button-group-wrapper {
+             margin-left: auto;
+             display: flex;
+             gap: 5px;
+        }
+
+
+        /* Estilos de Sumários, Gráficos e Tabela */
+        #periodoAnalizado {
+            font-weight: 600;
+            color: #a7f3d0; /* Verde Claro */
+            margin-bottom: 15px;
+            padding: 8px 10px;
+            background-color: #166534; /* Fundo verde escuro */
+            border-left: 5px solid #34d399; /* Borda verde clara */
+            border-radius: 4px;
+        }
+        .summary-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .summary-panels {
+            display: flex;
+            flex: 1; 
+            gap: 10px; 
+            min-width: 600px; 
+            flex-wrap: wrap; 
+        }
+        .summary-card {
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Sombra mais forte */
+            color: #fff;
+            text-align: center;
+            min-width: 200px; 
+            transition: transform 0.2s;
+        }
+
+        /* ----------------------------------------------------------- */
+        /* MODIFICAÇÕES PARA VALOR TOTAL FATURADO E META DE PESO */
+        /* ----------------------------------------------------------- */
+        
+        /* 1. Card Valor Total (Laranja/Amarelo - Destaque) */
+        #cardValorTotal {
+            background-color: #f97316; /* Laranja Escuro */
+            flex: 1 1 250px; 
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-right: 15px; 
+            position: relative;
+        }
+        .summary-title {
+            font-size: 1.1em;
+            font-weight: 500;
+            opacity: 0.9; /* Maior opacidade */
+            margin-bottom: 8px;
+            line-height: 1.2;
+            text-align: center;
+            width: 100%;
+        }
+        .summary-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            text-align: center;
+            width: 100%;
+        }
+
+        #toggleValorBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1em;
+            line-height: 30px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        #toggleValorBtn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Cor para Peso Total Faturado (Verde) */
+        .summary-card.peso { 
+            background-color: #047857; /* Verde Escuro */
+            flex: 1 1 200px; 
+        } 
+        
+        /* 2. Card de INPUT da Meta (Laranja/Amarelo) */
+        .summary-card.meta-input { 
+            background-color: #ca8a04; /* Amarelo Mostarda Escuro */
+            flex: 1 1 180px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); 
+            color: #fff;
+            text-align: center;
+        } 
+
+        /* Estilo do INPUT de Meta */
+        .summary-card.meta-input #inputMetaPeso {
+            background-color: rgba(0, 0, 0, 0.2); /* Fundo sutilmente escuro */
+            color: white; 
+            font-size: 1.6em; 
+            font-weight: 700;
+            padding: 8px 10px; 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border-radius: 6px; 
+            margin: 5px 0; 
+            width: 90%; 
+            text-align: center; 
+            outline: none; 
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .summary-card.meta-input #inputMetaPeso:focus {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-color: #fcd34d; /* Borda amarela no focus */
+        }
+
+        /* Card de CÁLCULO Diário Necessário (Azul) */
+        .summary-card.diario-necessario { 
+            background-color: #1d4ed8; /* Azul Escuro */
+            flex: 1 1 200px; 
+        } 
+        /* Cor de sucesso para o Diário Necessário */
+        .summary-card.diario-necessario[style*="10b981"] {
+             background-color: #10b981 !important; /* Verde (Sucesso) */
+        }
+        /* ----------------------------------------------------------- */
+
+        .charts-container {
+            display: flex;
+            gap: 10px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap;
+        }
+        .chart-panel {
+            flex: 1 1 31%; 
+            min-width: 300px; 
+        }
+        .chartContainer {
+            background-color: #334155; /* Fundo do gráfico escuro */
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            margin-bottom: 0; 
+            min-height: 300px; 
+            height: 350px; 
+        }
+        #tableWrapper {
+            overflow-x: auto;
+            max-width: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            background-color: #334155; /* Fundo da tabela escuro */
+        }
+        #dataTable {
+            min-width: 1100px; 
+            width: 100%; 
+            border-collapse: collapse;
+            font-family: 'Consolas', 'Courier New', monospace; 
+            font-size: 0.85em; 
+            color: #f8fafc; /* Cor do texto da tabela */
+        }
+        #dataTable th, #dataTable td {
+            border: 1px solid #475569; /* Borda escura */
+            padding: 8px; 
+            text-align: left;
+            white-space: nowrap; 
+        }
+        #dataTable th {
+            background-color: #1f2937; /* Fundo do cabeçalho mais escuro */
+            color: #94a3b8; /* Cor do texto do cabeçalho */
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            padding-top: 10px; 
+            padding-bottom: 10px; 
+        }
+        #dataTable tbody tr:nth-child(even) {
+            background-color: #2c384a; /* Linhas pares mais escuras */
+        }
+        .text-right {
+            text-align: right !important;
+        }
+        .filter-input {
+            padding: 4px 3px; 
+            font-size: 0.75em; 
+            background-color: #475569; /* Fundo do filtro escuro */
+            color: #f8fafc; /* Texto do filtro claro */
+            border: 1px solid #64748b;
+        }
+        #filterRow th {
+            background-color: #334155; /* Fundo da linha de filtro */
+        }
+        
+        /* Estilo para linhas excluídas */
+        .excluded-row {
+             background-color: #6d28d9; /* Cor de alerta (roxo escuro) */
+             opacity: 0.5;
+        }
+
+        /* AJUSTE PARA GRÁFICOS DO CHART.JS NO TEMA DARK */
+        .chartContainer {
+            /* Adiciona o estilo de fundo para os gráficos */
+            color: #f8fafc; /* Texto dentro do contêiner do gráfico */
+        }
+        /* Para estilizar o texto dentro do canvas, é necessário usar o Chart.js options,
+           mas o CSS a seguir garante que a cor base do Chart.js seja clara */
+        canvas {
+            color: #f8fafc;
+        }
+        /* Global Chart.js Font Color Override (feito via JS, mas garantindo compatibilidade) */
+        body {
+            /* Adiciona uma cor padrão para o texto dos gráficos */
+            --chart-font-color: #f8fafc;
+        }
+        
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+</head>
+<body>
+    
+    <div id="loadingSpinner">
+        <div class="spinner-icon"></div>
+    </div>
+    <div class="main-header">
+        <h1>Dashboard Detalhado de Faturamento - Mês Atual</h1>
+        <div class="header-controls-wrapper">
+             <div class="functions-dropdown" id="functionsDropdown">
+                <button class="dropdown-toggle-button" onclick="toggleDropdown()">Funções ▼</button>
+                <div class="dropdown-content">
+                    <div class="file-upload-wrapper">
+                        <label for="fileInput" class="custom-file-button">
+                            Importar Dados
+                        </label>
+                        <input type="file" id="fileInput" accept=".xlsx, .xls">
+                    </div>
+                    <button class="clear-data-button" onclick="clearDataFromDatabase()">Limpar Dados</button>
+                </div>
+             </div>
+             <a href="processos.html" class="back-button" style="margin-left: 0;">Voltar</a>
+        </div>
+    </div>
+    
+    <div class="controls-row">
+        </div>
+
+    <hr>
+    
+    <div id="periodoAnalizado">Período Analisado: Mês Atual (Carregando...)</div>
+
+    <div class="summary-wrapper">
+        <div class="summary-card" id="cardValorTotal"> 
+            <button id="toggleValorBtn" onclick="toggleValorTotal()">👁️</button>
+            <div class="summary-title">Valor Total Faturado</div>
+            <div class="summary-value" id="totalValor">R$ 0,00</div>
+        </div>
+        
+        <div class="summary-panels">
+            <div class="summary-card peso">
+                <div class="summary-title">Peso Total Faturado (Mês)</div>
+                <div class="summary-value" id="totalPeso">0,00 kg</div>
+            </div>
+            
+            <div class="summary-card meta-input"> 
+                 <div class="summary-title">Meta de Peso (Mês)</div>
+                 <input type="number" id="inputMetaPeso" value="0.00" step="0.01" min="0" 
+                        onchange="saveMetaToDatabase(true)" onblur="saveMetaToDatabase(true)" title="Definir a Meta de Peso para o mês">
+                 <div class="summary-title" style="margin-top: 4px; font-size: 0.8em; opacity: 0.7; text-align: center;">(Define o alvo do mês)</div>
+            </div>
+            
+            <div class="summary-card diario-necessario"> 
+                <div class="summary-title">Peso Diário Necessário</div>
+                <div class="summary-value" id="pesoDiarioNecessario">0,00 kg/dia</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="charts-container">
+        <div class="chart-panel">
+            <h2>Clientes com Mais Peso Faturado (Top 10)</h2>
+            <div class="chartContainer">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-panel">
+            <h2>Peso Total Faturado por Dia</h2>
+            <div class="chartContainer">
+                <canvas id="revenueChart"></canvas> 
+            </div>
+        </div>
+        
+        <div class="chart-panel">
+            <h2>Top 5 Materiais por Peso (kg)</h2>
+            <div class="chartContainer">
+                <canvas id="materialPieChart"></canvas> 
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-controls-row">
+        <h3>Filtro por Período:</h3>
+        <input type="date" id="filterFromDate" onchange="applyDateRangeFilter(false)" title="Filtrar De (Data Inicial)">
+        <input type="date" id="filterToDate" onchange="applyDateRangeFilter(false)" title="Filtrar Até (Data Final)">
+        
+        <div class="button-group-wrapper">
+             <button id="toggleServiceButton" class="period-control-button" onclick="toggleServiceExclusion()">
+                 Ocultar Serviços
+             </button>
+             <button id="togglePeriodFilterButton" class="period-control-button" onclick="togglePeriodFilter()">
+                 Mostrar Todos os Registros
+             </button>
+        </div>
+    </div>
+    <h2>Dados Importados</h2>
+    
+    <div id="tableWrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th data-col-index="0">DATA</th>
+                    <th data-col-index="1">CÓD. CLIENTE</th>
+                    <th data-col-index="2">CLIENTE</th>
+                    <th data-col-index="3">CÓDIGO</th>
+                    <th data-col-index="4">DESCRIÇÃO</th>
+                    <th data-col-index="5" class="text-right">QUANT.</th>
+                    <th data-col-index="6" class="text-right">Preço (Un)</th>
+                    <th data-col-index="7">MATERIAL</th>
+                    <th data-col-index="8" class="text-right">Peso Un</th>
+                    <th data-col-index="9" class="text-right">Peso Total</th>
+                    <th data-col-index="10" class="text-right col-valor-total-header">R$ Total</th> 
+                </tr>
+                <tr id="filterRow">
+                    <th><input type="text" class="filter-input" data-column="0" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por DATA"></th>
+                    <th><input type="text" class="filter-input" data-column="1" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por CÓD. CLIENTE"></th>
+                    <th><input type="text" class="filter-input" data-column="2" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por CLIENTE"></th>
+                    <th><input type="text" class="filter-input" data-column="3" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por CÓDIGO"></th>
+                    <th><input type="text" class="filter-input" data-column="4" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por DESCRIÇÃO"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="5" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por QUANT."></th>
+                    <th><input type="text" class="filter-input text-right" data-column="6" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por Preço (Un)"></th>
+                    <th><input type="text" class="filter-input" data-column="7" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por MATERIAL"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="8" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por Peso Un"></th>
+                    <th><input type="text" class="filter-input text-right" data-column="9" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por Peso Total"></th>
+                    <th class="col-valor-total-filter"><input type="text" class="filter-input text-right" data-column="10" onkeyup="filterTable()" placeholder="Filtro" title="Filtro por R$ Total"></th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // =========================================================
+        // JAVASCRIPT: LÓGICA DE DADOS, FILTROS E GRÁFICOS
+        // (MANTIDA INTACTA, APENAS ADICIONANDO A COR DA FONTE AO CHART.JS)
+        // =========================================================
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Nova função de inicialização para carregar dados do DB
+            loadDataFromDatabase(); 
+            
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('functionsDropdown');
+                const isClickInside = dropdown.contains(event.target);
+                if (!isClickInside) {
+                    dropdown.classList.remove('open');
+                }
+            });
+            
+            // NOVO: Inicializa o estado dos botões
+            document.getElementById('toggleServiceButton').setAttribute('data-active', 'false');
+            document.getElementById('togglePeriodFilterButton').setAttribute('data-mode', 'all'); // Inicializa no modo "Mostrar Todos"
+            
+            // ATUALIZAÇÃO PARA TEMA DARK: Configuração global para o Chart.js
+            Chart.defaults.color = '#f8fafc'; // Cor da fonte padrão para todos os gráficos (branco/claro)
+            Chart.defaults.borderColor = '#475569'; // Cor da borda padrão para linhas e eixos (cinza escuro)
+
+        });
+
+        // =========================================================
+        // FUNÇÕES DO SPINNER E BLOQUEIO DE TELA
+        // =========================================================
+        function showSpinner() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                spinner.style.display = 'flex';
+                // Bloqueia o scroll e o clique em elementos abaixo do spinner
+                document.body.classList.add('no-scroll');
+            }
+        }
+
+        function hideSpinner() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+                // Desbloqueia o scroll
+                document.body.classList.remove('no-scroll');
+            }
+        }
+        // =========================================================
+
+
+        function toggleDropdown() {
+             document.getElementById('functionsDropdown').classList.toggle('open');
+        }
+
+
+        let myWeightChart; 
+        let myWeightByDateChart; // NOME DA VARIÁVEL ATUALIZADO
+        let myMaterialPieChart; 
+        
+        const TOP_CLIENTS_COUNT = 10; 
+        const TOP_MATERIALS_COUNT = 5; 
+        
+        const COL_INDEX = {
+            DATA: 0, 
+            COD_CLIENTE: 1, // NOVO ÍNDICE
+            CLIENTE: 2, 
+            QUANT: 5, 
+            PRECO_UN: 6, 
+            MATERIAL: 7, 
+            PESO_UN: 8, 
+            PESO_TOTAL: 9, 
+            VALOR_TOTAL: 10 
+        };
+        
+        let globalDataArray = [];
+        let rawTotalValor = 0; 
+        let activeMonthFilter = null; 
+        let activeFromDate = null; 
+        let activeToDate = null; 
+        let currentMonthKey = ''; // Ex: '2025-10' (Para meta)
+        
+        // Códigos de Serviço a Serem Excluídos (CÓD. CLIENTE)
+        const EXCLUDED_CLIENT_CODES = ['2020', '257', '316']; 
+
+
+        const API_URL_FATURAMENTO = '/api/faturamento-clientes-detalhado';
+        const API_URL_METAS = '/api/metas';
+
+        // Cores ajustadas para funcionar melhor no tema Dark
+        const PIE_COLORS = [
+            '#3b82f6', /* Azul Claro */
+            '#10b981', /* Verde Esmeralda */
+            '#f59e0b', /* Amarelo Laranja */
+            '#f87171', /* Vermelho Claro */
+            '#a78bfa', /* Roxo Lavanda */
+            '#67e8f9', /* Ciano Claro */
+            '#f472b6', /* Rosa */
+        ];
+
+        // Helper para formatar data para input HTML (YYYY-MM-DD)
+        function formatDateToInput(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        
+        // --- Função para calcular dias úteis no mês (não usada no cálculo da meta) ---
+        function getBusinessDaysInMonth(year, month) {
+            const date = new Date(year, month - 1, 1);
+            let businessDays = 0;
+            
+            while (date.getMonth() === month - 1) {
+                const day = date.getDay();
+                // 0 = Dom, 6 = Sab
+                if (day !== 0 && day !== 6) { 
+                    businessDays++;
+                }
+                date.setDate(date.getDate() + 1);
+            }
+            return businessDays;
+        }
+
+        // --- FUNÇÃO ATUALIZADA: Conta dias úteis restantes *incluindo o dia de hoje* ---
+        function getRemainingBusinessDays() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth(); // Mês atual (0-11)
+            let remainingDays = 0;
+            
+            // Começa a contagem a partir de hoje
+            const date = new Date(today);
+            date.setHours(0, 0, 0, 0);
+
+            // Contar dias úteis (Seg-Sex) restantes até o final do mês (inclusive o dia de hoje)
+            while (date.getMonth() === month) {
+                const day = date.getDay();
+                // 0 = Dom, 6 = Sab
+                if (day !== 0 && day !== 6) { 
+                    remainingDays++;
+                }
+                // Avança para o próximo dia
+                date.setDate(date.getDate() + 1);
+            }
+            return remainingDays;
+        }
+
+
+        // --- Funções de Formatação ---
+        function formatCurrency(value) {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatNumber(value, decimalPlaces = 2, suffix = '') {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', { minimumFractionDigits: decimalPlaces, maximumFractionDigits: decimalPlaces }) + suffix;
+        }
+
+        function excelSerialDateToJSDate(serial) {
+            // Excel serial date adjustment (dias desde 1900-01-01)
+            const utc_days = Math.floor(serial - 25569); 
+            // 86400000 = milissegundos em um dia
+            const date_info = new Date(utc_days * 86400000); 
+            return date_info;
+        }
+        
+        function getDateObject(cellData) {
+            let dateObj;
+            
+            // 1. Caso: Número Serial do Excel (provavelmente importado do Excel)
+            if (typeof cellData === 'number' && cellData > 1) {
+                dateObj = excelSerialDateToJSDate(cellData);
+            // 2. Caso: String no formato DD/MM/YYYY (comum no Brasil)
+            } else if (typeof cellData === 'string' && cellData.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                const parts = cellData.split('/');
+                // Converte para MM/DD/YYYY para compatibilidade com new Date()
+                const rearrangedDate = `${parts[1]}/${parts[0]}/${parts[2]}`; 
+                dateObj = new Date(rearrangedDate);
+            // 3. Caso: Outro formato de string ou objeto Date nativo
+            } else {
+                dateObj = new Date(cellData);
+            }
+
+            if (!isNaN(dateObj.getTime())) {
+                // Zera o horário para comparação de data pura
+                dateObj.setHours(0, 0, 0, 0);
+            }
+
+            return dateObj;
+        }
+        
+        function toggleValorTotal() {
+            const card = document.getElementById('cardValorTotal');
+            const valueElement = document.getElementById('totalValor');
+            const button = document.getElementById('toggleValorBtn');
+            
+            const isVisible = card.getAttribute('data-visible') === 'true';
+            
+            const newState = !isVisible;
+            card.setAttribute('data-visible', newState);
+            
+            const style = newState ? 'table-cell' : 'none'; 
+
+            if (newState) {
+                valueElement.textContent = formatCurrency(rawTotalValor);
+                button.innerHTML = '👁️'; 
+            } else {
+                valueElement.textContent = 'R$ -'; 
+                button.innerHTML = '🔒'; 
+            }
+
+            const headerCell = document.querySelector('.col-valor-total-header');
+            if(headerCell) headerCell.style.display = style;
+            
+            const filterCell = document.querySelector('.col-valor-total-filter');
+            if(filterCell) filterCell.style.display = style;
+
+            const tableBody = document.querySelector('#dataTable tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cell = rows[i].cells[COL_INDEX.VALOR_TOTAL];
+                if (cell) {
+                    cell.style.display = style;
+                }
+            }
+        }
+
+
+        // --- FUNÇÕES DE PERSISTÊNCIA (DATABASE) ---
+        
+        async function loadMetaFromDatabase() {
+            currentMonthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
+            
+            try {
+                // Adiciona o mês atual como query parameter
+                const response = await fetch(`${API_URL_METAS}?mes_ano=${currentMonthKey}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const metaPeso = data.meta_peso || 0.0;
+                // Formata para o input HTML (ponto como separador decimal)
+                document.getElementById('inputMetaPeso').value = parseFloat(metaPeso).toFixed(2);
+                
+                updateSummaryPanels(); 
+                
+            } catch (error) {
+                console.error('Erro ao carregar meta do banco de dados:', error);
+                // Define um valor padrão se houver erro
+                document.getElementById('inputMetaPeso').value = '0.00'; 
+            }
+        }
+        
+        async function saveMetaToDatabase(shouldUpdatePanels = false) {
+             const inputElement = document.getElementById('inputMetaPeso');
+             const metaPeso = parseFloat(inputElement.value);
+             
+             if (isNaN(metaPeso) || metaPeso < 0) {
+                 alert('Por favor, insira um valor de meta válido.');
+                 inputElement.value = '0.00';
+                 return;
+             }
+             
+             const mesAno = currentMonthKey;
+             
+             showSpinner();
+             try {
+                 const response = await fetch(API_URL_METAS, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ mes_ano: mesAno, meta_peso: metaPeso })
+                 });
+                 
+                 const result = await response.json();
+                 
+                 if (result.success) {
+                    console.log('Meta salva com sucesso no DB.');
+                    
+                    // Ajuste de cores para tema dark
+                    inputElement.style.backgroundColor = '#1e403d'; // Verde escuro para sucesso 
+                    setTimeout(() => inputElement.style.backgroundColor = 'rgba(0, 0, 0, 0.2)', 500); // Volta ao fundo de input dark
+                       
+                    if (shouldUpdatePanels) {
+                        updateSummaryPanels();
+                    }
+                 } else {
+                     throw new Error(result.error || 'Erro desconhecido ao salvar meta.');
+                 }
+             } catch (error) {
+                console.error("Erro ao salvar meta no DB:", error);
+                alert("Erro ao salvar a meta no servidor. Tente novamente.");
+                // Ajuste de cores para tema dark
+                inputElement.style.backgroundColor = '#7f1d1d'; // Vermelho escuro para erro
+                setTimeout(() => inputElement.style.backgroundColor = 'rgba(0, 0, 0, 0.2)', 500);
+             } finally {
+                 hideSpinner();
+             }
+        }
+
+        async function loadDataFromDatabase() {
+            showSpinner();
+            
+            // 1. Carrega a Meta antes de carregar os dados
+            await loadMetaFromDatabase(); 
+            
+            try {
+                // 2. Carrega os Dados de Faturamento do Servidor
+                const response = await fetch(API_URL_FATURAMENTO);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const rawData = await response.json();
+                
+                if (rawData.length > 1) { 
+                    
+                    // Os dados agora vêm com valores numéricos já convertidos e recalculados no Python
+                    globalDataArray = rawData.map((row, rowIndex) => {
+                         // Pula o cabeçalho
+                         if (rowIndex === 0) return row; 
+                         
+                         let newRow = [...row];
+                         
+                         // Converte explicitamente para float para uso no JS, se for necessário
+                         const colsToParse = [
+                             COL_INDEX.QUANT, 
+                             COL_INDEX.PRECO_UN, 
+                             COL_INDEX.PESO_UN, 
+                             COL_INDEX.PESO_TOTAL, 
+                             COL_INDEX.VALOR_TOTAL
+                         ];
+                         
+                         colsToParse.forEach(colIndex => {
+                             // O dado do backend já deve vir como float, mas garantimos
+                             const cellData = newRow[colIndex];
+                             newRow[colIndex] = parseFloat(cellData) || 0;
+                         });
+                         
+                         return newRow;
+                    });
+                    
+                    console.log('Dados carregados do Servidor e normalizados.');
+                    
+                    displayTable(globalDataArray);
+                    
+                    // 3. Aplica o filtro padrão (Mês Atual) e ajusta o botão
+                    togglePeriodFilter('initial_load');
+                    
+                    document.getElementById('cardValorTotal').setAttribute('data-visible', 'true'); 
+                    toggleValorTotal(); 
+                } else {
+                    console.log('Nenhum dado encontrado no Banco de Dados.');
+                    clearDateRangeFilters();
+                    document.getElementById('cardValorTotal').setAttribute('data-visible', 'true'); 
+                    toggleValorTotal(); 
+                    updateSummaryPanels(0, 0, 0); 
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do Banco de Dados:', error);
+                alert('Erro ao carregar dados do servidor. Verifique o console para detalhes.');
+            } finally {
+                hideSpinner();
+            }
+        }
+        
+        async function saveDataToDatabase(dataArray) {
+            showSpinner();
+            try {
+                // O dataArray já é a estrutura esperada pelo backend: [ [headers], [row1], [row2], ... ]
+                // O backend (erus.py) fará o parseamento robusto e o recálculo do peso_total.
+                const response = await fetch(API_URL_FATURAMENTO, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataArray)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Dados de faturamento importados e salvos com sucesso no Banco de Dados!');
+                    
+                    // Força um recarregamento para que a lógica de "loadDataFromDatabase" normalize e exiba corretamente
+                    setTimeout(() => {
+                        window.location.reload(); 
+                    }, 50); 
+                    
+                    document.getElementById('functionsDropdown').classList.remove('open');
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao salvar dados no DB.');
+                }
+            } catch (error) {
+                console.error("Erro ao salvar dados no DB:", error);
+                alert("Erro ao salvar dados no servidor. Verifique o console.");
+            } finally {
+                // O hideSpinner é chamado indiretamente após o recarregamento, ou explicitamente em caso de erro.
+                if (!response || !response.ok) hideSpinner();
+            }
+        }
+        
+        async function clearDataFromDatabase() {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados de Faturamento e Metas salvos no BANCO DE DADOS? Esta ação é irreversível.')) {
+                showSpinner();
+                try {
+                    // Limpar Dados de Faturamento (enviando apenas o cabeçalho)
+                    const dataResponse = await fetch(API_URL_FATURAMENTO, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify([["DATA", "CÓD. CLIENTE", "CLIENTE", "CÓDIGO", "DESCRIÇÃO", "QUANT.", "Preço (Un)", "MATERIAL", "Peso Un", "Peso Total", "R$ Total"]]) 
+                    });
+                    
+                    // Limpar Meta (definir para 0.0 o mês atual)
+                    await saveMetaToDatabase(false); // Salva 0.0 para o mês atual
+                    
+                    if (!dataResponse.ok) throw new Error('Falha ao limpar dados de faturamento.');
+
+                    alert('Dados de faturamento e metas limpos com sucesso! A página será recarregada.');
+                    window.location.reload(); 
+                } catch (error) {
+                     console.error("Erro ao limpar dados do servidor:", error);
+                     alert("Erro ao limpar dados do servidor. Verifique o console.");
+                } finally {
+                    hideSpinner();
+                }
+            }
+        }
+        
+        // --- FUNÇÃO DE EXCLUSÃO DE SERVIÇOS (OCULTAR / MOSTRAR) ---
+        function toggleServiceExclusion() {
+            const button = document.getElementById('toggleServiceButton');
+            const isActive = button.getAttribute('data-active') === 'true';
+            
+            const newState = !isActive;
+            button.setAttribute('data-active', newState);
+
+            if (newState) {
+                button.classList.add('active');
+                button.textContent = 'Mostrar Serviços';
+            } else {
+                button.classList.remove('active');
+                button.textContent = 'Ocultar Serviços';
+            }
+            
+            filterTable(); 
+        }
+
+        // --- FUNÇÃO DE CONTROLE DE PERÍODO (MÊS ATUAL / TODOS) ---
+        function togglePeriodFilter(modeOverride) {
+            const button = document.getElementById('togglePeriodFilterButton');
+            let currentMode = button.getAttribute('data-mode'); // 'month' ou 'all'
+            
+            let newMode;
+            if (modeOverride === 'initial_load') {
+                 newMode = 'month';
+            } else {
+                 newMode = (currentMode === 'month') ? 'all' : 'month';
+            }
+
+            if (newMode === 'month') {
+                // Mudar para Mês Atual
+                button.textContent = 'Mostrar Todos os Registros';
+                button.setAttribute('data-mode', 'month');
+                resetFiltersToCurrentMonth(newMode === 'initial_load');
+            } else {
+                // Mudar para Todos os Registros
+                button.textContent = 'Resetar para Mês Atual';
+                button.setAttribute('data-mode', 'all');
+                resetAllFilters();
+            }
+        }
+
+
+        // --- Funções de Controle de Filtros ---
+        function clearColumnFilters() {
+            const filterInputs = document.querySelectorAll('.filter-input');
+            filterInputs.forEach(input => {
+                input.value = '';
+            });
+        }
+        
+        function clearDateRangeFilters() {
+            activeFromDate = null;
+            activeToDate = null;
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+        }
+        
+        function resetFiltersToCurrentMonth(isInitialLoad = false) {
+            if (!isInitialLoad) showSpinner(); 
+
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth(); // 0-11
+            
+            // 1º dia do mês atual
+            const firstDayOfMonth = new Date(year, month, 1);
+            firstDayOfMonth.setHours(0, 0, 0, 0); 
+            
+            // Ultimo dia do mês atual + 1 (para ser inclusivo no filtro)
+            const firstDayOfNextMonth = new Date(year, month + 1, 1);
+            firstDayOfNextMonth.setHours(0, 0, 0, 0);
+
+            activeFromDate = firstDayOfMonth;
+            activeToDate = firstDayOfNextMonth;
+            
+            document.getElementById('filterFromDate').value = formatDateToInput(firstDayOfMonth);
+            // O filtro 'Até' deve ser o último dia do mês para o usuário
+            const lastDayOfMonth = new Date(firstDayOfNextMonth);
+            lastDayOfMonth.setDate(lastDayOfMonth.getDate() - 1);
+            document.getElementById('filterToDate').value = formatDateToInput(lastDayOfMonth); 
+            
+            activeMonthFilter = null;
+            clearColumnFilters();
+            
+            setTimeout(() => {
+                filterTable(); 
+                updatePeriodAnalyzedForDetail(firstDayOfMonth, lastDayOfMonth); 
+                if (!isInitialLoad) hideSpinner();
+            }, 0);
+        }
+        
+        // NOVA FUNÇÃO: Reseta todos os filtros (Data, Coluna e Gráfico) para mostrar TUDO
+        function resetAllFilters() {
+            showSpinner(); 
+            
+            clearDateRangeFilters();
+            clearColumnFilters();
+            
+            activeMonthFilter = null;
+            
+            // Atualiza a visualização do período para indicar que todos os dados estão sendo vistos
+            updatePeriodAnalyzedForDetail(null, null);
+
+            setTimeout(() => {
+                filterTable(); 
+                hideSpinner();
+            }, 0);
+        }
+
+
+        function applyDateRangeFilter(resetMonthChart = true) {
+            const fromDateInput = document.getElementById('filterFromDate').value;
+            const toDateInput = document.getElementById('filterToDate').value;
+
+            if (fromDateInput) {
+                activeFromDate = new Date(fromDateInput + 'T00:00:00'); 
+            } else {
+                activeFromDate = null;
+            }
+
+            if (toDateInput) {
+                const toDateObj = new Date(toDateInput + 'T00:00:00');
+                toDateObj.setDate(toDateObj.getDate() + 1); // Torna o filtro inclusivo
+                activeToDate = toDateObj;
+                
+                // Pega a data de TO (usuário) para o painel de período
+                const toDateUserView = new Date(toDateInput + 'T00:00:00');
+                updatePeriodAnalyzedForDetail(activeFromDate, toDateUserView);
+
+            } else {
+                activeToDate = null;
+                updatePeriodAnalyzedForDetail(activeFromDate, null);
+            }
+            
+            // Se o usuário aplicar um filtro de data manual, o botão deve ir para o modo "Mostrar Todos os Registros"
+            const periodButton = document.getElementById('togglePeriodFilterButton');
+            periodButton.setAttribute('data-mode', 'all');
+            periodButton.textContent = 'Resetar para Mês Atual';
+            
+            if (resetMonthChart) {
+                activeMonthFilter = null;
+            }
+            clearColumnFilters(); 
+            
+            filterTable();
+        }
+
+        
+        // --- Funções de Leitura de Arquivo (Adaptadas) ---
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showSpinner(); 
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    // raw: true garante que os números de data do Excel sejam mantidos como números
+                    const workbook = XLSX.read(data, { type: 'array', raw: true }); 
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // header: 1 garante que o cabeçalho seja incluído como a primeira linha do array.
+                    const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
+                    
+                    // Agora, ao invés de salvar no servidor, salvamos no Banco de Dados.
+                    saveDataToDatabase(excelData);
+                    
+                } catch (error) {
+                    console.error("Erro durante a importação do arquivo:", error);
+                    alert("Erro ao processar o arquivo Excel. Verifique se o formato está correto.");
+                } finally {
+                    document.getElementById('fileInput').value = ''; 
+                    // O hideSpinner é chamado no saveDataToDatabase.
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // NOVA FUNÇÃO: Parseia o número (mais robusta no backend, mas mantida no frontend se for necessária)
+        function parseNumberFromLocaleString(str) {
+            // Se já é um número, apenas retorna ele
+            if (typeof str === 'number') return str;
+            if (typeof str !== 'string' || str.trim() === '') return 0;
+            
+            let cleanedStr = str.replace(/[^\d,\.]/g, ''); 
+            
+            // CORREÇÃO: Lógica para tratar o formato brasileiro (ponto para milhar, vírgula para decimal)
+            if (cleanedStr.includes('.') && cleanedStr.includes(',')) {
+                 // 1. Remove o separador de milhar (ponto)
+                 cleanedStr = cleanedStr.replace(/\./g, ''); 
+                 // 2. Troca a vírgula (separador decimal) por ponto
+                 cleanedStr = cleanedStr.replace(',', '.');
+            } else if (cleanedStr.includes(',')) {
+                 // Se tiver só vírgula (formato 4,67), troca a vírgula por ponto.
+                 cleanedStr = cleanedStr.replace(',', '.');
+            } else if (cleanedStr.includes('.') && cleanedStr.indexOf('.') !== cleanedStr.lastIndexOf('.')) {
+                 // Trata o caso onde há múltiplos pontos, presumindo que o último é o decimal
+                 let parts = cleanedStr.split('.');
+                 let decimal = parts.pop();
+                 cleanedStr = parts.join('') + '.' + decimal;
+            }
+
+            // Retorna o float
+            return parseFloat(cleanedStr) || 0;
+        }
+
+
+        // --- Funções de Análise, Tabela e Gráficos (Mantidas/Ajustadas) ---
+        function updatePeriodAnalyzed(dataArray) {
+             // Esta função é chamada apenas para a faixa total de datas do banco de dados (não filtrada)
+             // Em faturamentodetalhado.html, chamamos updatePeriodAnalyzedForDetail após o filtro do mês
+             return; 
+        }
+
+        function updatePeriodAnalyzedForDetail(fromDate, toDate) {
+            const element = document.getElementById('periodoAnalizado');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let fromStr = 'N/A';
+            let toStr = 'N/A';
+
+            if (fromDate) {
+                fromStr = fromDate.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            }
+            if (toDate) {
+                toStr = toDate.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            }
+
+            if (!fromDate && !toDate) {
+                 element.textContent = `Período Analisado: TODOS OS REGISTROS`;
+            } else if (fromDate && toDate && fromDate.getMonth() === today.getMonth() && fromDate.getFullYear() === today.getFullYear()) {
+                 element.textContent = `Período Analisado: Mês Atual (${fromStr} até ${toStr})`;
+            } else {
+                 element.textContent = `Período Analisado: ${fromStr} até ${toStr}`;
+            }
+        }
+
+
+        function displayTable(dataArray) {
+            const tableBody = document.querySelector('#dataTable tbody');
+            tableBody.innerHTML = '';
+            
+            if (dataArray.length < 2) { 
+                return;
+            }
+
+            // O backend garante que o array tem o cabeçalho e as colunas corretas.
+            const EXCEL_HEADERS = dataArray[0]; 
+
+            const dataRows = dataArray.slice(1);
+
+            dataRows.forEach(row => {
+                // Se o backend retornou arrays com o tamanho incorreto, ignore a linha
+                if (row.length < EXCEL_HEADERS.length) return; 
+
+                const newRow = tableBody.insertRow();
+                let searchData = []; 
+                let rawPeso = 0;
+                let rawValor = 0;
+                let rawQuant = 0;
+                let rawDateValue = ''; 
+                let rawMaterial = ''; 
+                
+                // NOVO: Verifica se a linha contém um código de serviço a ser excluído (CÓD. CLIENTE - índice 1)
+                const codCliente = String(row[COL_INDEX.COD_CLIENTE] || '').trim();
+                const isServiceRow = EXCLUDED_CLIENT_CODES.includes(codCliente);
+                
+                if(isServiceRow) {
+                    newRow.classList.add('excluded-row'); // Adiciona classe para destaque visual
+                    newRow.setAttribute('data-exclude-service', 'true');
+                } else {
+                     newRow.setAttribute('data-exclude-service', 'false');
+                }
+
+
+                for (let i = 0; i < EXCEL_HEADERS.length; i++) {
+                    let cellData = row[i] !== undefined ? row[i] : '';
+                    const newCell = newRow.insertCell();
+                    
+                    // O valor numérico já deve ser float (convertido e/ou calculado no Python)
+                    let numericValue = parseFloat(cellData) || 0; 
+                    let formattedText = String(cellData);
+                    
+                    if (i === COL_INDEX.DATA) {
+                        rawDateValue = cellData;
+                        const dateObj = getDateObject(cellData);
+                        
+                        if (!isNaN(dateObj.getTime())) {
+                            formattedText = dateObj.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        } else {
+                            formattedText = String(cellData); 
+                        }
+                    } else if (i === COL_INDEX.MATERIAL) {
+                         rawMaterial = String(cellData || '').trim();
+                         formattedText = rawMaterial;
+                    } else if (i === COL_INDEX.QUANT || i === COL_INDEX.PESO_TOTAL || i === COL_INDEX.VALOR_TOTAL || i === COL_INDEX.PRECO_UN || i === COL_INDEX.PESO_UN) {
+                        
+                        newCell.classList.add('text-right');
+                        
+                        if (i === COL_INDEX.QUANT) {
+                            formattedText = formatNumber(numericValue, 0);
+                            rawQuant = numericValue;
+                        } else if (i === COL_INDEX.PRECO_UN) { 
+                            formattedText = formatCurrency(numericValue);
+                        } else if (i === COL_INDEX.VALOR_TOTAL) {
+                            formattedText = formatCurrency(numericValue);
+                            rawValor = numericValue;
+                            newCell.classList.add('col-valor-total-cell'); 
+                        } else if (i === COL_INDEX.PESO_TOTAL) {
+                            formattedText = formatNumber(numericValue, 2, ' kg');
+                            rawPeso = numericValue;
+                        } else if (i === COL_INDEX.PESO_UN) { 
+                            formattedText = formatNumber(numericValue, 2, ' kg');
+                        }
+                    } 
+                    
+                    newCell.textContent = formattedText;
+                    // Para a busca, usamos o texto formatado (ou o valor numérico formatado)
+                    let searchContent = (typeof cellData === 'number') ? formatNumber(cellData, 2) : formattedText; 
+                    searchData.push(searchContent.toLowerCase().replace('r$', '').trim()); 
+                }
+                
+                newRow.setAttribute('data-search-data', JSON.stringify(searchData));
+                newRow.setAttribute('data-raw-peso', rawPeso);
+                newRow.setAttribute('data-raw-quant', rawQuant);
+                newRow.setAttribute('data-raw-valor', rawValor);
+                newRow.setAttribute('data-raw-cliente', String(row[COL_INDEX.CLIENTE] || '').trim());
+                newRow.setAttribute('data-raw-date', rawDateValue); 
+                newRow.setAttribute('data-raw-material', rawMaterial); 
+            });
+        }
+        
+        function updateSummaryPanels(filteredTotalPeso, filteredTotalValor, filteredTotalQuant) {
+            
+            // Peso total faturado no período (já filtrado)
+            // Se os parâmetros não vierem, assume 0. Isso acontece se o filtro não for aplicado ou na carga inicial sem dados.
+            const pesoFaturado = filteredTotalPeso !== undefined ? filteredTotalPeso : 
+                                 parseFloat(document.getElementById('totalPeso').textContent.replace(' kg', '').replace('.', '').replace(',', '.')) || 0;
+            
+            // Meta de peso
+            // Obtém do input (que é populado pela função loadMetaFromDatabase)
+            const metaPeso = parseFloat(document.getElementById('inputMetaPeso').value) || 0; 
+            
+            // Calcula o peso restante para a meta
+            const pesoRestante = Math.max(0, metaPeso - pesoFaturado);
+            
+            // Calcula os dias úteis restantes (agora incluindo o dia atual)
+            const diasRestantes = getRemainingBusinessDays(); 
+            
+            // Calcula o peso diário necessário
+            let pesoDiarioNecessario = 0;
+            if (pesoRestante > 0 && diasRestantes > 0) {
+                 pesoDiarioNecessario = pesoRestante / diasRestantes;
+            } else if (pesoRestante > 0 && diasRestantes === 0) {
+                 // Se não há mais dias úteis (e não atingiu), o necessário é o restante.
+                 pesoDiarioNecessario = pesoRestante; 
+            }
+            
+
+            // Atualiza Painel de Valor Total (se o parâmetro for fornecido)
+            if (filteredTotalValor !== undefined) {
+                 rawTotalValor = filteredTotalValor; 
+                 if (document.getElementById('cardValorTotal').getAttribute('data-visible') === 'true') {
+                    document.getElementById('totalValor').textContent = formatCurrency(rawTotalValor);
+                 }
+            }
+            
+            // Atualiza Painel de Peso Total
+            document.getElementById('totalPeso').textContent = formatNumber(pesoFaturado, 2, ' kg');
+            
+            // Atualiza Painel de Meta/Diário
+            document.getElementById('pesoDiarioNecessario').textContent = formatNumber(pesoDiarioNecessario, 2, ' kg/dia');
+            
+            // Aplica a cor no card de cálculo diário
+            const diarioCard = document.querySelector('.summary-card.diario-necessario'); 
+            // Alerta visual se a meta já foi atingida
+            if (pesoFaturado >= metaPeso && metaPeso > 0) {
+                diarioCard.style.backgroundColor = '#10b981'; // Verde (Sucesso)
+            } else {
+                diarioCard.style.backgroundColor = '#1d4ed8'; // Azul (Padrão)
+            }
+        }
+
+        function filterTable() {
+            const filterInputs = document.querySelectorAll('.filter-input');
+            const tableBody = document.querySelector('#dataTable tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            const isExclusionActive = document.getElementById('toggleServiceButton').getAttribute('data-active') === 'true'; // NOVO: Estado da Exclusão
+            
+            const activeFilters = Array.from(filterInputs)
+                .map(input => ({
+                    index: parseInt(input.getAttribute('data-column')),
+                    term: input.value.toLowerCase().trim()
+                }))
+                .filter(f => f.term.length > 0);
+
+            let filteredTotalPeso = 0;
+            let filteredTotalValor = 0;
+            let filteredTotalQuant = 0;
+            let visibleRowsDataForCharts = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Certifique-se de que data-search-data existe antes de tentar o JSON.parse
+                const rowSearchData = row.getAttribute('data-search-data') ? JSON.parse(row.getAttribute('data-search-data')) : [];
+                const rawDateValue = row.getAttribute('data-raw-date');
+                const isServiceExcludedRow = row.getAttribute('data-exclude-service') === 'true'; // NOVO: É uma linha de serviço?
+                
+                let matchesAllFilters = true;
+
+                // 1. Filtro de Exclusão de Serviços
+                // Se a exclusão está ativa E a linha é uma linha de serviço, a linha não corresponde.
+                if (isExclusionActive && isServiceExcludedRow) {
+                    matchesAllFilters = false;
+                }
+
+                // 2. Filtros de Coluna (Textuais)
+                if (matchesAllFilters && activeFilters.length > 0) {
+                    matchesAllFilters = activeFilters.every(filter => {
+                        const searchContent = rowSearchData[filter.index] || '';
+                        return searchContent.includes(filter.term);
+                    });
+                }
+                
+                // 3. Filtro por Período de Data
+                if (matchesAllFilters && (activeFromDate || activeToDate)) {
+                     const rowDateObj = getDateObject(rawDateValue); 
+                     
+                     if (isNaN(rowDateObj.getTime())) { 
+                         matchesAllFilters = false; 
+                     } else {
+                         const rowTimestamp = rowDateObj.getTime();
+                         
+                         if (activeFromDate && rowTimestamp < activeFromDate.getTime()) {
+                             matchesAllFilters = false;
+                         }
+                         // Usa ">=" pois activeToDate já está somado +1 dia no applyDateRangeFilter
+                         if (activeToDate && rowTimestamp >= activeToDate.getTime()) { 
+                             matchesAllFilters = false;
+                         }
+                     }
+                }
+
+                // 4. Filtro por Mês do Gráfico (clique na barra)
+                if (matchesAllFilters && activeMonthFilter) {
+                    const dateObj = getDateObject(rawDateValue);
+                    
+                    if (!isNaN(dateObj.getTime())) {
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const monthKey = `${year}-${month}`; 
+                        
+                        if (monthKey !== activeMonthFilter) {
+                            matchesAllFilters = false;
+                        }
+                    } else {
+                        matchesAllFilters = false; 
+                    }
+                }
+
+                if (matchesAllFilters) {
+                    row.style.display = ""; 
+                    
+                    // Os atributos data-raw já devem ser floats
+                    const rawPeso = parseFloat(row.getAttribute('data-raw-peso'));
+                    const rawValor = parseFloat(row.getAttribute('data-raw-valor'));
+                    const rawQuant = parseFloat(row.getAttribute('data-raw-quant'));
+                    const rawMaterial = row.getAttribute('data-raw-material'); 
+                    
+                    filteredTotalPeso += rawPeso;
+                    filteredTotalValor += rawValor;
+                    filteredTotalQuant += rawQuant;
+                    
+                    visibleRowsDataForCharts.push({
+                        cliente: row.getAttribute('data-raw-cliente'),
+                        peso: rawPeso,
+                        valor: rawValor,
+                        date: rawDateValue, 
+                        material: rawMaterial 
+                    });
+
+                } else {
+                    row.style.display = "none";
+                }
+            }
+            
+            updateSummaryPanels(filteredTotalPeso, filteredTotalValor, filteredTotalQuant);
+            generateWeightChart(visibleRowsDataForCharts); 
+            generateWeightByDateChart(visibleRowsDataForCharts); // CHAMADA DA FUNÇÃO ATUALIZADA
+            generateMaterialPieChart(visibleRowsDataForCharts); 
+        }
+        
+        function generateWeightChart(dataArray) { 
+            if (!dataArray || dataArray.length === 0) {
+                if (myWeightChart) { myWeightChart.destroy(); myWeightChart = null; }
+                return;
+            }
+
+            const clientWeightMap = new Map();
+            let totalWeight = 0; 
+            
+            dataArray.forEach(item => {
+                if (!item.cliente || item.peso === undefined || isNaN(item.peso)) return;
+
+                const clientName = item.cliente;
+                const rawWeight = item.peso; 
+
+                const currentWeight = clientWeightMap.get(clientName) || 0;
+                clientWeightMap.set(clientName, currentWeight + rawWeight);
+                totalWeight += rawWeight;
+            });
+
+            const sortedClients = Array.from(clientWeightMap.entries())
+                .map(([cliente, peso]) => ({ cliente, peso }))
+                .sort((a, b) => b.peso - a.peso) 
+                .slice(0, TOP_CLIENTS_COUNT);
+
+            let cumulativeWeight = 0;
+            const cumulativeData = sortedClients.map(c => {
+                cumulativeWeight += c.peso;
+                return totalWeight > 0 ? (cumulativeWeight / totalWeight) * 100 : 0;
+            });
+
+            const labels = sortedClients.map(c => c.cliente.split(' ')[0]);
+            const fullLabels = sortedClients.map(c => c.cliente);
+            const data = sortedClients.map(c => parseFloat(c.peso.toFixed(2))); 
+
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            
+            if (myWeightChart) {
+                myWeightChart.destroy();
+            }
+
+            myWeightChart = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labels, 
+                    datasets: [
+                        {
+                            type: 'line', 
+                            label: '', 
+                            data: cumulativeData,
+                            backgroundColor: PIE_COLORS[1], 
+                            borderColor: PIE_COLORS[1],
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1', 
+                            pointRadius: 4,
+                            tension: 0.3, 
+                            order: 0 
+                        },
+                        {
+                            type: 'bar', 
+                            label: '', 
+                            data: data,
+                            backgroundColor: PIE_COLORS[0], 
+                            borderColor: PIE_COLORS[0],
+                            borderWidth: 1,
+                            yAxisID: 'y0', 
+                            order: 1 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    indexAxis: 'x', 
+                    scales: {
+                        y0: { 
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Peso Faturado (kg)', color: Chart.defaults.color }, 
+                            ticks: { callback: function(value) { return formatNumber(value, 0, ' kg'); }, color: Chart.defaults.color }
+                        },
+                        y1: { 
+                            type: 'linear',
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { drawOnChartArea: false }, 
+                            title: { display: true, text: 'Acumulado (%)', color: Chart.defaults.color }, 
+                            ticks: { callback: function(value) { return value + ' %'; }, color: Chart.defaults.color }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }, 
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) { return fullLabels[context[0].dataIndex]; },
+                                label: function(context) {
+                                    let label = context.datasetIndex === 0 ? 'Acumulado: ' : 'Peso: ';
+                                    if (context.dataset.type === 'line') {
+                                        const value = context.parsed.y;
+                                        return label + value.toFixed(1) + ' %';
+                                    } else {
+                                        return label + formatNumber(context.parsed.y, 2, ' kg');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // FUNÇÃO ATUALIZADA PARA AGRUPAR POR DIA (PESO TOTAL FATURADO POR DIA)
+        function generateWeightByDateChart(dataArray) { 
+            if (!dataArray || dataArray.length === 0) {
+                if (myWeightByDateChart) { myWeightByDateChart.destroy(); myWeightByDateChart = null; } // VAR ATUALIZADA
+                return;
+            }
+
+            const weightMap = new Map();
+            
+            dataArray.forEach(item => {
+                if (!item.date || item.peso === undefined || isNaN(item.peso)) return;
+
+                const dateObj = getDateObject(item.date);
+                
+                if (isNaN(dateObj.getTime())) return;
+
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                
+                // NOVO: Chave de agrupamento por dia (YYYY-MM-DD)
+                const dayKey = `${year}-${month}-${day}`; 
+
+                const rawWeight = item.peso;
+                const currentWeight = weightMap.get(dayKey) || 0;
+                weightMap.set(dayKey, currentWeight + rawWeight);
+            });
+            
+            // Ordena por data (dia)
+            const sortedKeys = Array.from(weightMap.keys()).sort();
+            
+            const labels = sortedKeys.map(key => {
+                // key: YYYY-MM-DD
+                const parts = key.split('-'); 
+                // Mostra DD/MM (adequado para períodos curtos ou o mês atual)
+                return `${parts[2]}/${parts[1]}`; 
+            });
+            
+            const data = sortedKeys.map(key => parseFloat(weightMap.get(key).toFixed(2)));
+
+            // Remove a cor de destaque de "Mês Ativo" pois agora é por dia
+            const backgroundColors = Array(sortedKeys.length).fill(PIE_COLORS[2]);
+
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (myWeightByDateChart) { // VAR ATUALIZADA
+                myWeightByDateChart.destroy();
+            }
+
+            myWeightByDateChart = new Chart(ctx, { // VAR ATUALIZADA
+                type: 'bar',
+                data: {
+                    labels: labels, 
+                    datasets: [{
+                        label: 'Peso Total (kg)',
+                        data: data,
+                        backgroundColor: backgroundColors, 
+                        borderColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Peso Faturado (kg)', color: Chart.defaults.color },
+                            ticks: { 
+                                callback: function(value) { return formatNumber(value, 0, ' kg'); },
+                                color: Chart.defaults.color
+                            },
+                            maxTicksLimit: 10 
+                        },
+                        x: {
+                            title: { display: true, text: 'Dia/Mês', color: Chart.defaults.color },
+                            ticks: {
+                                color: Chart.defaults.color
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                // Atualiza o tooltip para exibir o dia completo (DD/MM/YYYY)
+                                title: function(context) { 
+                                    const key = sortedKeys[context[0].dataIndex];
+                                    const parts = key.split('-');
+                                    return `${parts[2]}/${parts[1]}/${parts[0]}`; 
+                                },
+                                label: function(context) {
+                                    let label = 'Peso Total (kg): ';
+                                    return label + formatNumber(context.parsed.y, 2, ' kg');
+                                }
+                            }
+                        },
+                    },
+                    onClick: (event, elements) => {
+                        // NOVO: Funcionalidade de clique desativada para este gráfico
+                        console.log('Ação de clique desativada para o gráfico diário.');
+                    }
+                }
+            });
+        }
+
+        function generateMaterialPieChart(dataArray) { 
+             if (!dataArray || dataArray.length === 0) {
+                if (myMaterialPieChart) { myMaterialPieChart.destroy(); myMaterialPieChart = null; }
+                return;
+            }
+
+            const materialWeightMap = new Map();
+            let totalWeight = 0;
+            
+            dataArray.forEach(item => {
+                if (!item.material || item.peso === undefined || isNaN(item.peso)) return;
+
+                const materialName = item.material.toUpperCase(); 
+                const rawWeight = item.peso; 
+
+                const currentWeight = materialWeightMap.get(materialName) || 0;
+                materialWeightMap.set(materialName, currentWeight + rawWeight);
+                totalWeight += rawWeight;
+            });
+
+            let sortedMaterials = Array.from(materialWeightMap.entries())
+                .map(([material, peso]) => ({ material, peso }))
+                .sort((a, b) => b.peso - a.peso);
+            
+            const topMaterials = sortedMaterials.slice(0, TOP_MATERIALS_COUNT);
+            let otherWeight = 0;
+            
+            if (sortedMaterials.length > TOP_MATERIALS_COUNT) {
+                 otherWeight = sortedMaterials.slice(TOP_MATERIALS_COUNT).reduce((sum, item) => sum + item.peso, 0);
+                 topMaterials.push({ material: 'OUTROS', peso: otherWeight });
+            }
+
+            const labels = topMaterials.map(c => c.material);
+            const data = topMaterials.map(c => parseFloat(c.peso.toFixed(2))); 
+
+            const ctx = document.getElementById('materialPieChart').getContext('2d');
+            
+            if (myMaterialPieChart) {
+                myMaterialPieChart.destroy();
+            }
+
+            myMaterialPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels, 
+                    datasets: [{
+                        data: data,
+                        backgroundColor: PIE_COLORS, 
+                        borderColor: '#1e293b', /* Borda escura para separar no fundo escuro */
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom', 
+                            labels: {
+                                padding: 10,
+                                color: Chart.defaults.color // Garante a cor da legenda
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = totalWeight > 0 ? ((value / totalWeight) * 100).toFixed(1) : 0;
+
+                                    return `${label}: ${formatNumber(value, 2, ' kg')} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
